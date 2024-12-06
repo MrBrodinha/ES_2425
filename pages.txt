@@ -1,0 +1,12 @@
+- Log in (Page)
+    - email
+    - nome
+    - password
+
+- Bank Information (Pág. Principal)
+    - log out ---> log ing (page)
+    - loan request ---> Loan Request (page)
+    - View Status of request ---> Status of Request (page)
+
+- 
+

@@ -4,7 +4,7 @@ from django.shortcuts import render
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
+from django.http import JsonResponse
 from app.serializers import UserSerializer
 
 
@@ -30,6 +30,10 @@ def index(request):
     data = { 'message': 'Hello 123' }
     return Response(data)
 
+@api_view(['GET'])
+# home page
+def home(request):
+    return Response({'message': 'Welcome to the home page'})
 
 @api_view(['GET'])
 # login page
@@ -58,5 +62,6 @@ def register(request):
         return render(request, 'index.html')
     else:
         return render(request, 'register.html')
+    
 
 

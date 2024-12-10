@@ -79,15 +79,15 @@ CORS_ALLOWED_ORIGINS = [
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# vou ter que criar variaveis dps para isto :p
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'SimpleDB',
-        'USER': 'admin',
-        'PASSWORD': 'Emanuel123_456',
-        'HOST': 'db-exemplo.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
-        'PORT': '3306',
+    'nope': {
+        'ENGINE': 'nope',
+        'NAME': 'nope',
+        'USER': 'nope',
+        'PASSWORD': 'nope',
+        'HOST': 'nope',
+        'PORT': 'nope',
     }
 }
 

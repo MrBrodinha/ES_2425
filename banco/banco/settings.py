@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'app.apps.AppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -81,8 +82,12 @@ CORS_ALLOWED_ORIGINS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'SimpleDB',
+        'USER': 'admin',
+        'PASSWORD': 'Emanuel123_456',
+        'HOST': 'db-exemplo.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
+        'PORT': '3306',
     }
 }
 

@@ -30,4 +30,5 @@ urlpatterns = [
     path("index/", views.index, name="index"),
     path("api/login", views.login, name="login"),
     path("api/home", views.home, name="home"),
+    path("test/", views.test, name="test")
 ]

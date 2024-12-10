@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from app.serializers import UserSerializer
 
+from app.models import People
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -64,4 +66,8 @@ def register(request):
         return render(request, 'register.html')
     
 
+
+def test(request):
+    data = People.objects.all()  # Fetch all rows
+    return render(request, 'test.html', {'data': data})
 

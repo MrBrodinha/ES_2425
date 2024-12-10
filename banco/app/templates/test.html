@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SimpleDB Data</title>
+</head>
+<body>
+    <h1>Data from SimpleDB</h1>
+    <ul>
+        {% for item in data %}
+            <li>{{ item.personid }} - {{ item.name }} - {{ item.age }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

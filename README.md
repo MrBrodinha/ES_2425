@@ -17,5 +17,11 @@ Requirements:~
 - pip install djangorestframework
 
 
+React:
+- sudo apt install npm
+- npm install
+- se com problemas, npm install web-vitals
+- npm start
+
 
 SEGUIR django-rest-framework.org/tutorial/

@@ -61,9 +61,28 @@ def register(request):
         password = request.POST.get('password')
         user = User.objects.create_user(username=username, email=email, password=password)
         user.save()
-        return render(request, 'index.html')
+        return Response({'message': 'User created'})
     else:
-        return render(request, 'register.html')
+        return Response({'message': 'User not created'})
+    
+
+# Loan simulation endpoint
+@api_view(['POST'])
+def loan_simulate(request):
+    amount = float(request.data.get('amount'))
+    duration = int(request.data.get('duration'))
+    # we must define this still
+    monthly_payment = (amount * 1.05) / duration  # Simple 5% interest calculation
+    return Response({"monthly_payment": round(monthly_payment, 2)})
+
+# Loan application submission
+@api_view(['POST'])
+def loan_apply(request):
+    income = float(request.data.get('income'))
+    expenses = float(request.data.get('expenses'))
+    # Placeholder logic to randomly classify loan request
+    result = ["Accept", "Interview", "Reject"]
+    return Response({"result": result[0]})
     
 
 

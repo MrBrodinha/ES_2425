@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css"; // Import the CSS file for styling
+import Navbar from "../Navbar/Navbar";
 
 const Login = () => {
     const [username, setUsername] = useState("");
@@ -35,6 +36,7 @@ const Login = () => {
     };
 
     return (
+        <><Navbar />
         <div className="login-container">
             <div className="login-card">
                 <h2>Login</h2>
@@ -46,8 +48,7 @@ const Login = () => {
                             id="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            required
-                        />
+                            required />
                     </div>
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
@@ -56,8 +57,7 @@ const Login = () => {
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                            required />
                     </div>
                     {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="login-button" disabled={loading}>
@@ -68,7 +68,7 @@ const Login = () => {
                     </div>
                 </form>
             </div>
-        </div>
+        </div></>
     );
 };
 

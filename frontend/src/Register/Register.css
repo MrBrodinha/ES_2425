@@ -1,5 +1,5 @@
-/* Center the login container */
-.login-container {
+/* Center the register container */
+.register-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -8,8 +8,8 @@
     margin: 0;
 }
 
-/* Login card styling */
-.login-card {
+/* Register card styling */
+.register-card {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -18,7 +18,7 @@
     text-align: center;
 }
 
-.login-card h2 {
+.register-card h2 {
     margin-bottom: 20px;
     color: #333333;
     font-size: 24px;
@@ -58,9 +58,9 @@
     font-size: 14px;
 }
 
-/* Login button styling */
-.login-button {
-    background-color: #4c9aff;
+/* Register button styling */
+.register-button {
+    background-color: #4caf50;
     color: #ffffff;
     padding: 10px 20px;
     border: none;
@@ -71,11 +71,11 @@
     margin-top: 10px;
 }
 
-.login-button:hover {
-    background-color: #3578e5;
+.register-button:hover {
+    background-color: #45a049;
 }
 
-.login-button:disabled {
+.register-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }

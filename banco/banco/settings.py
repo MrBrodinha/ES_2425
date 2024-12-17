@@ -81,13 +81,9 @@ CORS_ALLOWED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 # vou ter que criar variaveis dps para isto :p
 DATABASES = {
-    'nope': {
-        'ENGINE': 'nope',
-        'NAME': 'nope',
-        'USER': 'nope',
-        'PASSWORD': 'nope',
-        'HOST': 'nope',
-        'PORT': 'nope',
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

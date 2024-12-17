@@ -30,5 +30,9 @@ urlpatterns = [
     path("index/", views.index, name="index"),
     path("api/login", views.login, name="login"),
     path("api/home", views.home, name="home"),
+    path("api/register", views.register, name="register"),
+    path("api/get_all_users", views.get_all_users, name="get_all_users"),
+    path("api/loan/simulate", views.loan_simulate, name="loan_simulate"),
+    path("api/loan/apply", views.loan_apply, name="loan_apply"),
     path("test/", views.test, name="test")
 ]

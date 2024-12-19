@@ -7,8 +7,6 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from app.serializers import UserSerializer
 
-from app.models import People
-
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -83,10 +81,6 @@ def loan_apply(request):
     # Placeholder logic to randomly classify loan request
     result = ["Accept", "Interview", "Reject"]
     return Response({"result": result[0]})
-    
-
 
 def test(request):
-    data = People.objects.all()  # Fetch all rows
-    return render(request, 'test.html', {'data': data})
-
+    return render(request, 'test.html')

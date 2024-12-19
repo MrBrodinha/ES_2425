@@ -1,0 +1,112 @@
+Retrieving logs...
+============= i-0e73d453ca6d376db ==============
+----------------------------------------
+/var/log/eb-engine.log
+----------------------------------------
+        File "/var/app/venv/staging-LQM1lest/lib64/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 335, in main
+          json_out['return_val'] = hook(**hook_input['kwargs'])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/var/app/venv/staging-LQM1lest/lib64/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 118, in get_requires_for_build_wheel
+          return hook(config_settings)
+                 ^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 334, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 304, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 320, in run_setup
+          exec(code, locals())
+        File "<string>", line 155, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 24.2 -> 24.3.1
+[notice] To update, run: python3.12 -m pip install --upgrade pip
+error: subprocess-exited-with-error
+
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+
+2024/12/19 02:59:05.435050 [ERROR] An error occurred during execution of command [app-deploy] - [InstallDependency]. Stop running the command. Error: fail to install dependencies with requirements.txt file with error Command /var/app/venv/staging-LQM1lest/bin/pip install -r requirements.txt failed with error exit status 1. Stderr:  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [29 lines of output]
+      Trying pkg-config --exists mysqlclient
+      Command 'pkg-config --exists mysqlclient' returned non-zero exit status 1.
+      Trying pkg-config --exists mariadb
+      Command 'pkg-config --exists mariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists libmariadb
+      Command 'pkg-config --exists libmariadb' returned non-zero exit status 1.
+      Trying pkg-config --exists perconaserverclient
+      Command 'pkg-config --exists perconaserverclient' returned non-zero exit status 1.
+      Traceback (most recent call last):
+        File "/var/app/venv/staging-LQM1lest/lib64/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 353, in <module>
+          main()
+        File "/var/app/venv/staging-LQM1lest/lib64/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 335, in main
+          json_out['return_val'] = hook(**hook_input['kwargs'])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/var/app/venv/staging-LQM1lest/lib64/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 118, in get_requires_for_build_wheel
+          return hook(config_settings)
+                 ^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 334, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 304, in _get_build_requires
+          self.run_setup()
+        File "/tmp/pip-build-env-fp02drue/overlay/lib/python3.12/site-packages/setuptools/build_meta.py", line 320, in run_setup
+          exec(code, locals())
+        File "<string>", line 155, in <module>
+        File "<string>", line 49, in get_config_posix
+        File "<string>", line 28, in find_package_name
+      Exception: Can not find valid pkg-config name.
+      Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 24.2 -> 24.3.1
+[notice] To update, run: python3.12 -m pip install --upgrade pip
+error: subprocess-exited-with-error
+
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+ 
+
+2024/12/19 02:59:05.435055 [INFO] Executing cleanup logic
+2024/12/19 02:59:05.435138 [INFO] CommandService Response: {"status":"FAILURE","api_version":"1.0","results":[{"status":"FAILURE","msg":"Engine execution has encountered an error.","returncode":1,"events":[{"msg":"Instance deployment failed to install application dependencies. The deployment failed.","timestamp":1734577145435,"severity":"ERROR"},{"msg":"Instance deployment failed. For details, see 'eb-engine.log'.","timestamp":1734577145435,"severity":"ERROR"}]}]}
+
+2024/12/19 02:59:05.438235 [INFO] Platform Engine finished execution on command: app-deploy
+
+2024/12/19 03:00:28.967019 [INFO] Starting...
+2024/12/19 03:00:28.967070 [INFO] Starting EBPlatform-PlatformEngine
+2024/12/19 03:00:28.967090 [INFO] reading event message file
+2024/12/19 03:00:28.967252 [INFO] Engine received EB command cfn-hup-exec
+
+2024/12/19 03:00:29.034060 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:975050165416:stack/awseb-e-en8vywurym-stack/6f6b9860-bdb4-11ef-acea-128dd1ff08f1 -r AWSEBAutoScalingGroup --region us-east-1
+2024/12/19 03:00:29.410608 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:975050165416:stack/awseb-e-en8vywurym-stack/6f6b9860-bdb4-11ef-acea-128dd1ff08f1 -r AWSEBBeanstalkMetadata --region us-east-1
+2024/12/19 03:00:29.755435 [INFO] checking whether command tail-log is applicable to this instance...
+2024/12/19 03:00:29.755449 [INFO] this command is applicable to the instance, thus instance should execute command
+2024/12/19 03:00:29.755452 [INFO] Engine command: (tail-log)
+
+2024/12/19 03:00:29.755501 [INFO] Executing instruction: GetTailLogs
+2024/12/19 03:00:29.755504 [INFO] Tail Logs...
+2024/12/19 03:00:29.755782 [INFO] Running command: tail -n 100 /var/log/eb-engine.log
+
+
+----------------------------------------
+/var/log/eb-hooks.log
+----------------------------------------
+
+

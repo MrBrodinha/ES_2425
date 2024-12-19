@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-=aok^64cfiz#5q67q07ko^dz_-5klvn0a&^^@ma!j09o%s&^&^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'banco-env.eba-erfdrpdq.us-east-1.elasticbeanstalk.com'
+]
 
 
 # Application definition
@@ -39,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -79,25 +81,12 @@ CORS_ALLOWED_ORIGINS = [
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-# vou ter que criar variaveis dps para isto :p
-# vou ter que criar variaveis dps para isto :p
 DATABASES = {
-    'nope': {
-        'ENGINE': 'nope',
-        'NAME': 'nope',
-        'USER': 'nope',
-        'PASSWORD': 'nope',
-        'HOST': 'nope',
-        'PORT': 'nope',
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 
 # Password validation

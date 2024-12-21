@@ -7,6 +7,18 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from app.serializers import UserSerializer
 
+import boto3
+import uuid
+
+# AWS Config
+Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:471112572365:stateMachine:LoanResult'
+Step_function_client = boto3.client(
+    'stepfunctions',
+    # aws_access_key_id='ASIAW3MD7LXGZUENADQQ',
+    # aws_secret_access_key='hGpxwHiflvbOm0PLiKBuXyX/uN+15BPB3fT/a8o3',
+    region_name='us-east-1'
+
+)
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -78,9 +90,48 @@ def loan_simulate(request):
 def loan_apply(request):
     income = float(request.data.get('income'))
     expenses = float(request.data.get('expenses'))
-    # Placeholder logic to randomly classify loan request
-    result = ["Accept", "Interview", "Reject"]
-    return Response({"result": result[0]})
+
+    # Simulate credit score calculation based on income and expenses
+    credit_score = int((income - expenses) / 100)
+
+    print(f"Credit score: {credit_score}")
+
+    # Create a unique execution name for Step Functions
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    try:
+        response = Step_function_client.start_execution(
+            stateMachineArn=Step_function_LoanResult_arn,
+            name=execution_name,
+            input=f'{{"creditScore": {credit_score}}}'
+        )
+        return Response({
+            "message": "Loan application submitted successfully!",
+            "executionArn": response["executionArn"]
+        })
+    except Exception as e:
+        print("An error occured: ", e)
+        return Response({"error": str(e)}, status=500)
+    
+@api_view(['GET'])
+def get_loan_result(request):
+    execution_arn = request.query_params.get("executionArn")
+
+    if not execution_arn:
+        return Response({"error": "executionArn is required"}, status=400)
+
+    # Get Step Functions execution result
+    try:
+        response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        return Response({
+            "status": response["status"],
+            "result": response.get("output")  # Output from the workflow
+        })
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 def test(request):
     return render(request, 'test.html')

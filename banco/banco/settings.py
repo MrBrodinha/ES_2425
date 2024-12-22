@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,8 +27,7 @@ SECRET_KEY = 'django-insecure-=aok^64cfiz#5q67q07ko^dz_-5klvn0a&^^@ma!j09o%s&^&^
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'banco-env.eba-erfdrpdq.us-east-1.elasticbeanstalk.com',
-    'localhost'
+    '*'
 ]
 
 
@@ -77,7 +77,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'banco.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "*",
 ]
 
 # Database
@@ -135,3 +135,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')

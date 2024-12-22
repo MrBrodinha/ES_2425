@@ -7,6 +7,9 @@ pip install -r requirements.txt
 
 pip freeze > requirements.txt
 
+(mudar as credenciais)
+nano ~/.aws/credentials
+
 eb init
 
 eb create banco-env --service-role LabRole --keyname vockey --instance_profile LabInstanceProfile

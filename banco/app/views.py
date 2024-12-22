@@ -10,14 +10,19 @@ from app.serializers import UserSerializer
 import boto3
 import uuid
 
+import time
+
+
 # AWS Config
-Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:471112572365:stateMachine:LoanResult'
+Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResult'
+Step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanSimulate'
+Step_function_LoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanStatus'
+Step_function_SelectInterviewSlot_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SelectInterviewSlot'
+Step_function_SetInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SetInterviewSlots'
+
 Step_function_client = boto3.client(
     'stepfunctions',
-    # aws_access_key_id='ASIAW3MD7LXGZUENADQQ',
-    # aws_secret_access_key='hGpxwHiflvbOm0PLiKBuXyX/uN+15BPB3fT/a8o3',
     region_name='us-east-1'
-
 )
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -81,57 +86,211 @@ def register(request):
 def loan_simulate(request):
     amount = float(request.data.get('amount'))
     duration = int(request.data.get('duration'))
-    # we must define this still
-    monthly_payment = (amount * 1.05) / duration  # Simple 5% interest calculation
-    return Response({"monthly_payment": round(monthly_payment, 2)})
-
-# Loan application submission
-@api_view(['POST'])
-def loan_apply(request):
-    income = float(request.data.get('income'))
-    expenses = float(request.data.get('expenses'))
-
-    # Simulate credit score calculation based on income and expenses
-    credit_score = int((income - expenses) / 100)
-
-    print(f"Credit score: {credit_score}")
-
-    # Create a unique execution name for Step Functions
+    
+    # Create a unique execution name
     execution_name = f"loan-{uuid.uuid4()}"
 
     # Start Step Functions execution
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_LoanSimulate_arn,
+        name=execution_name,
+        input=f'{{"amount": {amount}, "duration": {duration}}}'
+    )
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Loan simulation processed successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+# Loan application endpoint
+@api_view(['POST'])
+def loan_apply(request):
     try:
+        # Extract income and expenses
+        income = float(request.data.get('income'))
+        expenses = float(request.data.get('expenses'))
+        
+        amount = float(request.data.get('amount'))
+        duration = int(request.data.get('duration'))
+
+        # user id
+        user_id = request.data.get('user_id')
+
+        # Simulate credit score calculation
+        # credit_score = int((income - expenses) / 100)
+        # print(f"Credit score: {credit_score}")
+
+        # Create a unique execution name
+        execution_name = f"loan-{uuid.uuid4()}"
+
+        # Start Step Functions execution
         response = Step_function_client.start_execution(
             stateMachineArn=Step_function_LoanResult_arn,
             name=execution_name,
-            input=f'{{"creditScore": {credit_score}}}'
+            input=f'{{"income": {income}, "expenses": {expenses}, "amount": {amount}, "duration": {duration}, "user_id": "{user_id}"}}'
         )
-        return Response({
-            "message": "Loan application submitted successfully!",
-            "executionArn": response["executionArn"]
-        })
+        execution_arn = response["executionArn"]
+
+        # Poll for execution result
+        while True:
+            execution_response = Step_function_client.describe_execution(
+                executionArn=execution_arn
+            )
+            status = execution_response["status"]
+            
+            if status == "SUCCEEDED":
+                # Parse the result
+                result = execution_response["output"]
+                return Response({
+                    "message": "Loan application processed successfully!",
+                    "Result": result
+                })
+            elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+                return Response({
+                    "error": f"Step Functions execution failed with status: {status}"
+                }, status=500)
+            
+            # Wait before polling again
+            time.sleep(2)
+
     except Exception as e:
-        print("An error occured: ", e)
+        print("An error occurred: ", e)
         return Response({"error": str(e)}, status=500)
-    
+
+# Allows clients to check the status of their loan application.
 @api_view(['GET'])
-def get_loan_result(request):
-    execution_arn = request.query_params.get("executionArn")
+def loan_status(request):
 
-    if not execution_arn:
-        return Response({"error": "executionArn is required"}, status=400)
+    loan_id = request.GET.get('loan_id')
+    
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
 
-    # Get Step Functions execution result
-    try:
-        response = Step_function_client.describe_execution(
+    # Start Step Functions execution
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_LoanStatus_arn,
+        name=execution_name,
+        input=f'{{"loan_id": "{loan_id}"}}'
+    )
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
             executionArn=execution_arn
         )
-        return Response({
-            "status": response["status"],
-            "result": response.get("output")  # Output from the workflow
-        })
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Loan status processed successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+# Allows clients to select an interview slot.
+@api_view(['POST'])
+def select_interview_slot(request):
+    loan_id = request.data.get('loan_id')
+    slot_id = request.data.get('slot_id')
+
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_SelectInterviewSlot_arn,
+        name=execution_name,
+        input=f'{{"loan_id": "{loan_id}", "slot_id": "{slot_id}"}}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Interview slot selected successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+@api_view(['POST'])
+def set_interview_slots(request):
+    slots = request.data.get('slots')
+    loan_id = request.data.get('loan_id')
+
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_SetInterviewSlots_arn,
+        name=execution_name,
+        input=f'{{"slots": {slots}, "loan_id": "{loan_id}"}}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Interview slots set successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+
+
 
 def test(request):
     return render(request, 'test.html')

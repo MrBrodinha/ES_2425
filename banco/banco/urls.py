@@ -34,6 +34,8 @@ urlpatterns = [
     path("api/get_all_users", views.get_all_users, name="get_all_users"),
     path("api/loan/simulate", views.loan_simulate, name="loan_simulate"),
     path("api/loan/apply", views.loan_apply, name="loan_apply"),
-    path("api/loan/result", views.get_loan_result, name="get_loan_result"),
+    path("api/loan/status", views.loan_status, name="loan_status"),
+    path("api/interview/select", views.select_interview_slot, name="select_interview_slot"),
+    path("api/interview/set", views.set_interview_slot, name="set_interview_slot"),
     path("test/", views.test, name="test")
 ]

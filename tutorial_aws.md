@@ -36,12 +36,6 @@ criar DB chamada "users-info" (por terminal, dbeaver, whatever)
 
 adicionar dados "muppet"
 
--- Create the database
-CREATE DATABASE example_db;
-
--- Connect to the database
-\c example_db;
-
 -- Create the user table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,             -- Auto-incrementing primary key
@@ -52,7 +46,7 @@ CREATE TABLE users (
 );
 
 -- Insert some sample data
-INSERT INTO app_users (username, email, password, has_permissions)
+INSERT INTO users (username, email, password, hasPermissions)
 VALUES 
     ('Filipe', 'filipe@gmail.com', '123456', FALSE),
     ('Emanuel', 'Emanuel@gmail.com', '123456', FALSE),

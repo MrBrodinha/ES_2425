@@ -16,7 +16,7 @@ eb create banco-env --service-role LabRole --keyname vockey --instance_profile L
 
 eb deploy
 
-
+eb terminate banco-env
 
 NÃO FAZER ISTO AINDA
 # Cognito

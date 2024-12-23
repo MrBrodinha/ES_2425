@@ -2,98 +2,48 @@ import React, { useState } from "react";
 import "./Loan.css";
 
 const Loan = () => {
-    const [income, setIncome] = useState("");
-    const [expenses, setExpenses] = useState("");
-    const [amount, setAmount] = useState("");
-    const [duration, setDuration] = useState(""); 
-    const [executionArn, setExecutionArn] = useState(null);
-    const [result, setResult] = useState(null);
+    const [amount, setAmount] = useState(""); // Loan amount
+    const [duration, setDuration] = useState(""); // Loan duration
     const [loading, setLoading] = useState(false);
+    const [simulationResult, setSimulationResult] = useState(null);
 
-    const simulateLoan = (amount, duration) => {
-        fetch("http://localhost:8000/api/loan/simulate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount, duration }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                console.log("Simulation Result:", data);
-            })
-            .catch((err) => console.error("Error simulating loan:", err));
-    };
-    
-
-    // Submit loan application
-    const submitApplication = (e) => {
+    // Function to handle the loan simulation
+    const handleSimulate = (e) => {
         e.preventDefault();
         setLoading(true);
+        setSimulationResult(null); // Clear previous results
 
-        fetch("http://localhost:8000/api/loan/apply", {
+        // Make API request to the backend
+        fetch("http://banco-env.eba-wexihakc.us-east-1.elasticbeanstalk.com/api/loan/simulate", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({
-                income,
-                expenses,
-                amount,
-                duration,
-                user_id: "1", // Replace with the correct user ID
+                amount: parseFloat(amount),
+                duration: parseInt(duration),
             }),
         })
-            .then((res) => res.json())
+            .then((response) => response.json())
             .then((data) => {
-                setExecutionArn(data.executionArn);  // Store the execution ARN
+                if (data.Result) {
+                    setSimulationResult(JSON.parse(data.Result)); // Save the result
+                } else {
+                    alert("Simulation failed. Please try again.");
+                }
                 setLoading(false);
-                alert("Loan application submitted. Fetching results...");
             })
             .catch((err) => {
-                console.error("Error:", err);
+                console.error("Error during simulation:", err);
+                alert("An error occurred during the simulation.");
                 setLoading(false);
             });
     };
 
-    // Fetch loan status
-    const fetchLoanStatus = () => {
-        if (!executionArn) {
-            alert("No executionArn found. Submit the loan application first.");
-            return;
-        }
-
-        // Call the 'api/loan/status' endpoint to check the status of the loan application using executionArn
-        fetch(`http://localhost:8000/api/loan/status?loan_id=${executionArn}`)
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.Result) {
-                    // If the result exists, display it
-                    setResult(JSON.parse(data.Result));
-                } else {
-                    alert("Loan result not available yet. Please try again later.");
-                }
-            })
-            .catch((err) => console.error("Error fetching loan status:", err));
-    };
-
-    
-
     return (
         <div className="loan-page">
-            <h1>Loan Application</h1>
-
-            <form onSubmit={submitApplication}>
-                <label>Monthly Income (€):</label>
-                <input
-                    type="number"
-                    value={income}
-                    onChange={(e) => setIncome(e.target.value)}
-                    required
-                />
-                <label>Monthly Expenses (€):</label>
-                <input
-                    type="number"
-                    value={expenses}
-                    onChange={(e) => setExpenses(e.target.value)}
-                    required
-                />
+            <h1>Loan Simulation</h1>
+            <form onSubmit={handleSimulate}>
                 <label>Loan Amount (€):</label>
                 <input
                     type="number"
@@ -101,6 +51,7 @@ const Loan = () => {
                     onChange={(e) => setAmount(e.target.value)}
                     required
                 />
+
                 <label>Loan Duration (Months):</label>
                 <input
                     type="number"
@@ -108,15 +59,17 @@ const Loan = () => {
                     onChange={(e) => setDuration(e.target.value)}
                     required
                 />
+
                 <button type="submit" disabled={loading}>
-                    {loading ? "Submitting..." : "Submit Application"}
+                    {loading ? "Simulating..." : "Simulate"}
                 </button>
             </form>
 
-            {executionArn && (
-                <div>
-                    <button onClick={fetchLoanStatus}>Fetch Loan Status</button>
-                    {result && <p>Loan Result: {JSON.stringify(result)}</p>}
+            {/* Display the simulation result */}
+            {simulationResult && (
+                <div className="simulation-result">
+                    <h2>Simulation Result</h2>
+                    <pre>{JSON.stringify(simulationResult, null, 2)}</pre>
                 </div>
             )}
         </div>

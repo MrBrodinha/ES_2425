@@ -9,9 +9,9 @@ Como correr:
 - python manage.py collectstatic
 - python manage.py runserver
 
-Por fazer:
-select interview slot
-um update do status do loan (para o loan officer aceitar ou rejeitar)
+Por fazer: 
+select interview slot (remodelar)
+um update do status do loan (para o loan officer aceitar ou rejeitar) (remodelar)
 
 
 Feito:

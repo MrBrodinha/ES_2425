@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from app.serializers import UserSerializer
 
+import json
+
 import boto3
 import uuid
 
@@ -19,6 +21,8 @@ Step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMac
 Step_function_LoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanStatus'
 Step_function_SelectInterviewSlot_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SelectInterviewSlot'
 Step_function_SetInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SetInterviewSlots'
+Step_function_GetLoans_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:GetLoans'
+Step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatus'
 
 Step_function_client = boto3.client(
     'stepfunctions',
@@ -257,12 +261,31 @@ def set_interview_slots(request):
     slots = request.data.get('slots')
     loan_id = request.data.get('loan_id')
 
+    # Example slots: ["2021-10-01T09:00:00", "2021-10-01T10:00:00", "2021-10-01T11:00:00"]
+
+    print(f"Slots: {slots}")
+
+    # Ensure slots is a valid list
+    if not isinstance(slots, list):
+        return Response({"error": "Slots must be a list."}, status=400)
+
     # Create a unique execution name
     execution_name = f"loan-{uuid.uuid4()}"
+
+    # Properly serialize the input as JSON
+    input_data = {
+        "slots": slots,
+        "loan_id": loan_id
+    }
+
+    # Convert input_data to a JSON string
+    json_input = json.dumps(input_data)
+
+    # Start the Step Function execution
     response = Step_function_client.start_execution(
         stateMachineArn=Step_function_SetInterviewSlots_arn,
         name=execution_name,
-        input=f'{{"slots": {slots}, "loan_id": "{loan_id}"}}'
+        input=json_input  # Pass the serialized JSON input
     )
 
     execution_arn = response["executionArn"]
@@ -289,7 +312,83 @@ def set_interview_slots(request):
         # Wait before polling again
         time.sleep(2)
 
+# Get all loans
+@api_view(['GET'])
+def get_all_loans(request):
 
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_GetLoans_arn,
+        name=execution_name,
+        input='{}'
+    )
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Get Loans processed successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+# Update loan status
+@api_view(['PUT'])
+def update_loan_status(request):
+
+    loan_id = request.data.get('loan_id')
+    loan_status = request.data.get('loan_status')
+
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    response = Step_function_client.start_execution(
+        stateMachineArn=Step_function_UdpateLoanStatus_arn,
+        name=execution_name,
+        input=f'{{"loan_id": "{loan_id}", "loan_status": "{loan_status}"}}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = Step_function_client.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "message": "Loan status updated successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
 
 
 def test(request):

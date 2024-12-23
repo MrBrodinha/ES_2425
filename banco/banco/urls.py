@@ -31,11 +31,13 @@ urlpatterns = [
     path("api/login", views.login, name="login"),
     path("api/home", views.home, name="home"),
     path("api/register", views.register, name="register"),
-    path("api/get_all_users", views.get_all_users, name="get_all_users"),
+    path("api/users", views.get_all_users, name="get_all_users"),
+    path("api/loans", views.get_all_loans, name="get_all_loans"),
     path("api/loan/simulate", views.loan_simulate, name="loan_simulate"),
     path("api/loan/apply", views.loan_apply, name="loan_apply"),
     path("api/loan/status", views.loan_status, name="loan_status"),
+    path("api/loan/update", views.update_loan_status, name="update_loan_status"),
     path("api/interview/select", views.select_interview_slot, name="select_interview_slot"),
-    path("api/interview/set", views.set_interview_slot, name="set_interview_slot"),
+    path("api/interview/set", views.set_interview_slots, name="set_interview_slots"),
     path("test/", views.test, name="test")
 ]

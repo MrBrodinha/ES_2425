@@ -10,7 +10,7 @@ Como correr:
 - python manage.py runserver
 
 Por fazer:
-get all loans and status
+select interview slot
 um update do status do loan (para o loan officer aceitar ou rejeitar)
 
 
@@ -20,7 +20,7 @@ loan simulate
 loan apply
 loan status
 definir os interview slots
-select interview slot 
+get all loans and status
 
 Requirements:~
 - pip install django

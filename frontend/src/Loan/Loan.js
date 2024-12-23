@@ -4,9 +4,25 @@ import "./Loan.css";
 const Loan = () => {
     const [income, setIncome] = useState("");
     const [expenses, setExpenses] = useState("");
+    const [amount, setAmount] = useState("");
+    const [duration, setDuration] = useState(""); 
     const [executionArn, setExecutionArn] = useState(null);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    const simulateLoan = (amount, duration) => {
+        fetch("http://localhost:8000/api/loan/simulate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount, duration }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log("Simulation Result:", data);
+            })
+            .catch((err) => console.error("Error simulating loan:", err));
+    };
+    
 
     // Submit loan application
     const submitApplication = (e) => {
@@ -16,11 +32,17 @@ const Loan = () => {
         fetch("http://localhost:8000/api/loan/apply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ income, expenses }),
+            body: JSON.stringify({
+                income,
+                expenses,
+                amount,
+                duration,
+                user_id: "1", // Replace with the correct user ID
+            }),
         })
             .then((res) => res.json())
             .then((data) => {
-                setExecutionArn(data.executionArn);
+                setExecutionArn(data.executionArn);  // Store the execution ARN
                 setLoading(false);
                 alert("Loan application submitted. Fetching results...");
             })
@@ -30,24 +52,28 @@ const Loan = () => {
             });
     };
 
-    // Fetch loan result
-    const fetchResult = () => {
+    // Fetch loan status
+    const fetchLoanStatus = () => {
         if (!executionArn) {
             alert("No executionArn found. Submit the loan application first.");
             return;
         }
 
-        fetch(`http://localhost:8000/api/loan/result/?executionArn=€{executionArn}`)
+        // Call the 'api/loan/status' endpoint to check the status of the loan application using executionArn
+        fetch(`http://localhost:8000/api/loan/status?loan_id=${executionArn}`)
             .then((res) => res.json())
             .then((data) => {
-                if (data.result) {
-                    setResult(JSON.parse(data.result));
+                if (data.Result) {
+                    // If the result exists, display it
+                    setResult(JSON.parse(data.Result));
                 } else {
-                    alert("Result not available yet. Try again later.");
+                    alert("Loan result not available yet. Please try again later.");
                 }
             })
-            .catch((err) => console.error("Error fetching result:", err));
+            .catch((err) => console.error("Error fetching loan status:", err));
     };
+
+    
 
     return (
         <div className="loan-page">
@@ -68,6 +94,20 @@ const Loan = () => {
                     onChange={(e) => setExpenses(e.target.value)}
                     required
                 />
+                <label>Loan Amount (€):</label>
+                <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                />
+                <label>Loan Duration (Months):</label>
+                <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    required
+                />
                 <button type="submit" disabled={loading}>
                     {loading ? "Submitting..." : "Submit Application"}
                 </button>
@@ -75,8 +115,8 @@ const Loan = () => {
 
             {executionArn && (
                 <div>
-                    <button onClick={fetchResult}>Fetch Loan Result</button>
-                    {result && <p>Loan Result: {result}</p>}
+                    <button onClick={fetchLoanStatus}>Fetch Loan Status</button>
+                    {result && <p>Loan Result: {JSON.stringify(result)}</p>}
                 </div>
             )}
         </div>

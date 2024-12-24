@@ -14,7 +14,9 @@ idna==3.10
 jmespath==1.0.1
 mysqlclient==2.2.6
 pathspec==0.10.1
+pillow==11.0.0
 PyJWT==2.10.1
+PyMySQL==1.1.1
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
 requests==2.32.3

@@ -5,9 +5,9 @@ Conta admin:
 - admin
 
 Como correr:
-- python manage.py migrate
-- python manage.py collectstatic
-- python manage.py runserver
+- python3 manage.py migrate
+- python3 manage.py collectstatic
+- python3 manage.py runserver
 
 Por fazer: 
 select interview slot (remodelar)

@@ -16,7 +16,9 @@ eb create banco-env --service-role LabRole --keyname vockey --instance_profile L
 
 eb deploy
 
-eb terminate banco-env# ANTES DE COMEÇAR A TRABALHAR
+eb terminate banco-env
+
+# ANTES DE COMEÇAR A TRABALHAR
 
 ## RDS 
 
@@ -24,7 +26,7 @@ Criar MySQL no RDS
 {
     FREE TIER
 
-    nome: users-info
+    nome: algo-db
 
     admin
     pass automatica e mudar no models.py
@@ -32,12 +34,14 @@ Criar MySQL no RDS
     PUBLIC ACCESS
 }
 
-criar DB chamada "users-info" (por terminal, dbeaver, whatever)
+ATUALIZAR INFORMAÇÃO NO MODELS.PY
 
-adicionar dados "muppet"
+inserir dados por algum canto (dbeaver, terminal, whatever)
 
--- Create the user table
-CREATE TABLE users (
+CREATE DATABASE users-info;
+
+-- Create the clients table
+CREATE TABLE clients (
     id SERIAL PRIMARY KEY,             -- Auto-incrementing primary key
     username VARCHAR(150) NOT NULL,    -- Username field, max length 150
     email VARCHAR(255) UNIQUE NOT NULL, -- Email field, must be unique
@@ -46,7 +50,7 @@ CREATE TABLE users (
 );
 
 -- Insert some sample data
-INSERT INTO users (username, email, password, hasPermissions)
+INSERT INTO clients (username, email, password, hasPermissions)
 VALUES 
     ('Filipe', 'filipe@gmail.com', '123456', FALSE),
     ('Emanuel', 'Emanuel@gmail.com', '123456', FALSE),

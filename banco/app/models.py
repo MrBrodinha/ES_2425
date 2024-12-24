@@ -3,10 +3,10 @@ from django.db import models
 import pymysql
 
 connection = pymysql.connect(
-    host='users-info.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
-    user='admin',
-    password='iHewTdQFWFH0zzO8JSUH',
-    database='users-info',
+    host='lol',
+    user='lol',
+    password='lol',
+    database='lol',
     port=3306
 )
 
@@ -24,3 +24,5 @@ def get_client_by_email(email):
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT * FROM clients WHERE email = '{email}'")
         return cursor.fetchone()
+    
+    

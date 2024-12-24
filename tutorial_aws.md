@@ -16,7 +16,7 @@ eb create banco-env --service-role LabRole --keyname vockey --instance_profile L
 
 eb deploy
 
-# ANTES DE COMEÇAR A TRABALHAR
+eb terminate banco-env# ANTES DE COMEÇAR A TRABALHAR
 
 ## RDS 
 

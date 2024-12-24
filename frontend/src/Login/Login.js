@@ -3,12 +3,13 @@ import "./Login.css"; // Import the CSS file for styling
 import Navbar from "../Navbar/Navbar";
 
 const Login = () => {
-    const [username, setUsername] = useState("");
+    const [ email, setEmail ] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e) => {
+    const handleLogin = (e) =>
+    {
         e.preventDefault();
         setLoading(true);
         setError(null);
@@ -17,23 +18,38 @@ const Login = () => {
         fetch("http://localhost:8000/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email, password }),
         })
-            .then((response) => {
-                if (!response.ok) {
+            .then((response) =>
+            {
+                console.log("Response status:", response.status); // Log response status
+                if (!response.ok)
+                {
                     throw new Error("Invalid credentials");
                 }
                 return response.json();
             })
-            .then((data) => {
-                alert(`Welcome, ${data.username}!`);
-                setLoading(false);
+            .then((data) =>
+            {
+                console.log("Response data:", data); // Log the received data
+                if (data.username)
+                {
+                    alert(`Welcome, ${ data.username }!`);
+                    setLoading(false);
+                } else
+                {
+                    setError(data.message || "An error occurred");
+                    setLoading(false);
+                }
             })
-            .catch((error) => {
+            .catch((error) =>
+            {
+                console.error("Error:", error); // Log error
                 setError(error.message);
                 setLoading(false);
             });
     };
+
 
     return (
         <><Navbar />
@@ -42,12 +58,12 @@ const Login = () => {
                 <h2>Login</h2>
                 <form onSubmit={handleLogin}>
                     <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="email">E-mail</label>
                         <input
                             type="text"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required />
                     </div>
                     <div className="form-group">

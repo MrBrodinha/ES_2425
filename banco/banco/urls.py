@@ -20,7 +20,6 @@ from rest_framework import routers
 from app import views
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -30,7 +29,6 @@ urlpatterns = [
     path("index/", views.index, name="index"),
     path("api/login", views.login, name="login"),
     path("api/home", views.home, name="home"),
-    path("api/register", views.register, name="register"),
     path("api/users", views.get_all_users, name="get_all_users"),
     path("api/loans", views.get_all_loans, name="get_all_loans"),
     path("api/loan/simulate", views.loan_simulate, name="loan_simulate"),

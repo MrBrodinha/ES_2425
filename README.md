@@ -22,10 +22,6 @@ loan status
 definir os interview slots
 get all loans and status
 
-Requirements:~
-- pip install django
-- pip install djangorestframework
-
 
 React:
 - sudo apt install npm

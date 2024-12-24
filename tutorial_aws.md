@@ -27,7 +27,7 @@ Criar MySQL no RDS
     nome: users-info
 
     admin
-    admin123_456
+    pass automatica e mudar no models.py
 
     PUBLIC ACCESS
 }
@@ -51,3 +51,28 @@ VALUES
     ('Filipe', 'filipe@gmail.com', '123456', FALSE),
     ('Emanuel', 'Emanuel@gmail.com', '123456', FALSE),
     ('Ivo', 'ivo@gmail.com', '123456', TRUE);
+
+
+-----
+face rekognition (https://medium.com/cloudnloud/build-your-own-face-recognition-service-using-amazon-rekognition-c75919d7f66e)
+
+NO TERMINAL DO AWS
+
+[cloudshell-user@ip-10-130-84-97 ~]$ aws rekognition create-collection --collection-id caras --region us-east-1
+
+[cloudshell-user@ip-10-130-84-97 ~]$ aws s3 mb s3://caras-images --region us-east-1
+
+[cloudshell-user@ip-10-130-84-97 ~]$ aws dynamodb create-table --table-name caras_recognition --attribute-definitions 
+
+criar trigger para lambda function (fazer igual link acima, lambda function chama se face recoknition algo)
+
+correr imagens_recog/add_images.py para adicionar imagens
+
+
+ELIMINAR TUDO NO FINAL!!!!
+S3 BUCKET
+DYNAMO
+REKOGNITION COLLECTION ---> no link
+
+
+SEGUIR O LINK EM GERAL É MELHOR

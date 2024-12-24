@@ -1,11 +1,9 @@
-from django.contrib.auth.models import User
 from rest_framework import permissions, viewsets
 from django.shortcuts import render
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
-from app.serializers import UserSerializer
 
 import json
 
@@ -14,6 +12,8 @@ import uuid
 
 import time
 
+from . import models
+import jwt
 
 # AWS Config
 Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResult'
@@ -28,14 +28,6 @@ Step_function_client = boto3.client(
     'stepfunctions',
     region_name='us-east-1'
 )
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 # get all users
@@ -56,33 +48,35 @@ def index(request):
 def home(request):
     return Response({'message': 'Welcome to the home page'})
 
-@api_view(['GET'])
-# login page
-def login(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = User.objects.get(username=username)
-        if user.check_password(password):
-            return Response({'message': 'Login success'})
-        else:
-            return Response({'message': 'Login failed'})
-    else:
-        return Response({'message': 'Login failed'})
-    
-
-# create user
 @api_view(['POST'])
-def register(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-        return Response({'message': 'User created'})
+def login(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    client = models.get_client_by_email(email)
+
+    if client is None:
+        return Response({'message': 'User not found'})
+
     else:
-        return Response({'message': 'User not created'})
+        if client[3] == password:
+            token = {
+                'id': client[0],
+                'username': client[1],
+                'email': client[2],
+                'hasPermission': client[4]
+            }
+
+            key = 'AlgoBueAleatoriolol'
+
+            #obtain token from token
+            token = jwt.encode(token, key, algorithm='HS256')
+
+            return Response({'username': f'{client[1]}',
+                             'token': token}) 
+        else:
+            return Response({'message': 'Wrong password'})
+
     
 
 # Loan simulation endpoint

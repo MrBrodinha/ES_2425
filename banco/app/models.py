@@ -3,9 +3,9 @@ from django.db import models
 import pymysql
 
 connection = pymysql.connect(
-    host='database-1.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
+    host='bruh, ver no aws rds',
     user='admin',
-    password='GvUFyayd)42Q8tgnguknBNCJ<QTQ',
+    password='bruh, ver no aws console manager ou secret manager whatever',
     database='users-info',
     port=3306
 )

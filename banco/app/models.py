@@ -3,10 +3,10 @@ from django.db import models
 import pymysql
 
 connection = pymysql.connect(
-    host='lol',
-    user='lol',
-    password='lol',
-    database='lol',
+    host='database-1.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
+    user='admin',
+    password='GvUFyayd)42Q8tgnguknBNCJ<QTQ',
+    database='users-info',
     port=3306
 )
 

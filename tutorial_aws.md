@@ -1,4 +1,5 @@
 # EB CONFIG
+(FAZER EM ULTIMO)
 
 ES_2425: cd banco
 ES_2425/banco:
@@ -18,9 +19,7 @@ eb deploy
 
 eb terminate banco-env
 
-# ANTES DE COMEÇAR A TRABALHAR
-
-## RDS 
+# RDS 
 
 Criar MySQL no RDS
 {
@@ -66,7 +65,7 @@ NO TERMINAL DO AWS
 
 [cloudshell-user@ip-10-130-84-97 ~]$ aws s3 mb s3://caras-images --region us-east-1
 
-[cloudshell-user@ip-10-130-84-97 ~]$ aws dynamodb create-table --table-name caras_recognition --attribute-definitions 
+[cloudshell-user@ip-10-130-84-97 ~]$ aws dynamodb create-table --table-name caras_recognition --attribute-definitions AttributeName=RekognitionId,AttributeType=S --key-schema AttributeName=RekognitionId,KeyType=HASH  --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1 --region us-east-1
 
 criar trigger para lambda function (fazer igual link acima, lambda function chama se face recoknition algo)
 

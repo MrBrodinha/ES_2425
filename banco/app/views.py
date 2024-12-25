@@ -15,6 +15,8 @@ import time
 from . import models
 import jwt
 
+import base64
+
 # AWS Config
 Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResult'
 Step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanSimulate'
@@ -26,6 +28,16 @@ Step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stat
 
 Step_function_client = boto3.client(
     'stepfunctions',
+    region_name='us-east-1'
+)
+
+rekognition = boto3.client(
+    'rekognition', 
+    region_name='us-east-1'
+)
+
+dynamodb = boto3.client(
+    'dynamodb', 
     region_name='us-east-1'
 )
 
@@ -52,6 +64,7 @@ def home(request):
 def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
+    image = request.data.get('photo')
 
     client = models.get_client_by_email(email)
 
@@ -60,6 +73,35 @@ def login(request):
 
     else:
         if client[3] == password:
+            
+            if ',' in image:
+                image = image.split(',')[1]
+
+            image_bytes = base64.b64decode(image)
+
+            try:
+                response = rekognition.search_faces_by_image(
+                    CollectionId='caras',
+                    Image={'Bytes':image_bytes}                                       
+                )
+            except Exception as e:
+                return Response({'message': 'Face not found'})
+
+            found = False
+
+            for match in response['FaceMatches']:
+                face = dynamodb.get_item(
+                    TableName='caras_recognition',  
+                    Key={'RekognitionId': {'S': match['Face']['FaceId']}}
+                    )
+                
+                if 'Item' in face and face['Item']['FullName']['S'] == client[1]:
+                    found = True
+                    break
+
+            if not found:
+                return Response({'message': 'Person cannot be recognized'})
+
             token = {
                 'id': client[0],
                 'username': client[1],

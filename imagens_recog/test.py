@@ -5,9 +5,14 @@ from PIL import Image
 rekognition = boto3.client('rekognition', region_name='us-east-1')
 dynamodb = boto3.client('dynamodb', region_name='us-east-1')
 
+# make it open a app to photograph my face
+
 image_path = input("Enter path of the image to check: ")
 
 image = Image.open(image_path)
+
+print(image)
+
 stream = io.BytesIO()
 image.save(stream,format="JPEG")
 image_binary = stream.getvalue()

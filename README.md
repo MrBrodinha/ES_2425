@@ -1,13 +1,15 @@
 # Projeto ES_2425
 
-Conta admin:
-- admin
-- admin
-
 Como correr:
-- python3 manage.py migrate
-- python3 manage.py collectstatic
-- python3 manage.py runserver
+- Na pasta frontend
+    - criar .env e meter onde trabalhar (localhost:8000 ou link da amazon)
+    - npm run build
+    - copiar pasta build para ES_2425/banco/react
+
+- Correr comandos
+    - python3 manage.py migrate
+    - python3 manage.py collectstatic
+    - python3 manage.py runserver
 
 Por fazer: 
 select interview slot (remodelar)

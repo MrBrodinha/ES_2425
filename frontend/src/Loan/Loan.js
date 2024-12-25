@@ -14,7 +14,7 @@ const Loan = () => {
         setSimulationResult(null); // Clear previous results
 
         // Make API request to the backend
-        fetch("http://banco-env.eba-wexihakc.us-east-1.elasticbeanstalk.com/api/loan/simulate", {
+        fetch("${process.env.REACT_APP_URL}/loan/simulate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -61,7 +61,9 @@ ROOT_URLCONF = 'banco.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'app' / 'templates'],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'react/build')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -137,3 +139,6 @@ REST_FRAMEWORK = {
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'react/build/static')
+]

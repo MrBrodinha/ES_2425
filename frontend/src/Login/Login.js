@@ -33,7 +33,7 @@ const Login = () =>
         setError(null);
 
         // Simulate login API request
-        fetch("http://localhost:8000/api/login", {
+        fetch("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, photo: imgSrc }),

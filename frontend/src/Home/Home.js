@@ -9,7 +9,7 @@ const Home = () => {
 
     useEffect(() => {
         // Fetch data from if not error
-        fetch("http://localhost:8000/api/home")
+        fetch("${process.env.REACT_APP_URL}/api/home")
             .then((res) => res.json())
             .then((data) => {
                 setData(data.message);

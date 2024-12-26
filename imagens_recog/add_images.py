@@ -8,9 +8,6 @@ images = [
     ('imagem1.jpg', 'Ivo'),
     ('imagem2.jpg', 'Ivo'),
     ('imagem3.jpg', 'Ivo'),
-    ('imagem4.jpg', 'Filipe'),
-    ('imagem5.jpg', 'Filipe'),
-    ('imagem6.jpg', 'Filipe'),
     ('emanuel1.jpg', 'Emanuel'),
     ('emanuel2.jpg', 'Emanuel'),
     ('emanuel3.jpg', 'Emanuel'),
@@ -18,7 +15,12 @@ images = [
     ('emanuel5.jpg', 'Emanuel'),
     ('emanuel6.jpg', 'Emanuel'),
     ('emanuel7.jpg', 'Emanuel'),
-    ('emanuel8.jpg', 'Emanuel')
+    ('emanuel8.jpg', 'Emanuel'),
+    ('filipe1.jpg', 'Filipe'),
+    ('filipe2.jpg', 'Filipe'),
+    ('filipe3.jpg', 'Filipe'),
+    ('filipe4.jpg', 'Filipe'),
+    ('filipe5.jpg', 'Filipe')
 ]
 
 # Define the S3 bucket name

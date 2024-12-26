@@ -17,6 +17,8 @@ import jwt
 
 import base64
 
+import os
+
 # AWS Config
 Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResult'
 Step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanSimulate'
@@ -25,6 +27,7 @@ Step_function_SelectInterviewSlot_arn = 'arn:aws:states:us-east-1:975050165416:s
 Step_function_SetInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SetInterviewSlots'
 Step_function_GetLoans_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:GetLoans'
 Step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatus'
+Step_function_LoanResultRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResultRDS'
 
 Step_function_client = boto3.client(
     'stepfunctions',
@@ -41,6 +44,28 @@ dynamodb = boto3.client(
     region_name='us-east-1'
 )
 
+s3 = boto3.client(
+    's3',
+    region_name='us-east-1'
+)
+
+#validate token
+def validate_token(token):
+    key = 'AlgoBueAleatoriolol'
+    try:
+        decoded = jwt.decode(token, key, algorithms='HS256')
+        return True
+    except jwt.ExpiredSignatureError:
+        return False
+    
+#return token info
+def get_token_info(token):
+    key = 'AlgoBueAleatoriolol'
+    try:
+        decoded = jwt.decode(token, key, algorithms='HS256')
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return False
 
 # get all users
 @api_view(['GET'])
@@ -118,14 +143,54 @@ def login(request):
                              'token': token}) 
         else:
             return Response({'message': 'Wrong password'})
+        
+
+@api_view(['POST'])
+def verify_face(request):
+    image = request.data.get('photo')
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    username = get_token_info(token)['username']
+
+    if ',' in image:
+        image = image.split(',')[1]
+
+    image_bytes = base64.b64decode(image)
+
+    try:
+        response = rekognition.search_faces_by_image(
+            CollectionId='caras',
+            Image={'Bytes':image_bytes}                                       
+        )
+
+    except Exception as e:
+        return Response({'message': 'Face not found'})
+    
+    found = False
+
+    for match in response['FaceMatches']:
+        face = dynamodb.get_item(
+            TableName='caras_recognition',  
+            Key={'RekognitionId': {'S': match['Face']['FaceId']}}
+            )
+        
+        if 'Item' in face and face['Item']['FullName']['S'] == username:
+            found = True
+            return Response({'confirmation': 'correct'})
+        
+    if not found:
+        return Response({'message': 'Person cannot be recognized'})
 
     
-
 # Loan simulation endpoint
 @api_view(['POST'])
 def loan_simulate(request):
     amount = float(request.data.get('amount'))
     duration = int(request.data.get('duration'))
+    yearly_income = float(request.data.get('yearly_income'))
     
     # Create a unique execution name
     execution_name = f"loan-{uuid.uuid4()}"
@@ -134,7 +199,7 @@ def loan_simulate(request):
     response = Step_function_client.start_execution(
         stateMachineArn=Step_function_LoanSimulate_arn,
         name=execution_name,
-        input=f'{{"amount": {amount}, "duration": {duration}}}'
+        input=f'{{"amount":{amount},"duration":{duration},"yearly_income":{yearly_income}}}'
     )
     execution_arn = response["executionArn"]
 
@@ -148,9 +213,10 @@ def loan_simulate(request):
         if status == "SUCCEEDED":
             # Parse the result
             result = execution_response["output"]
+                
             return Response({
                 "message": "Loan simulation processed successfully!",
-                "Result": result
+                "Result": json.loads(result)
             })
         elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
             return Response({
@@ -160,32 +226,56 @@ def loan_simulate(request):
         # Wait before polling again
         time.sleep(2)
 
+@api_view(['POST'])
+def submit_documents(request):
+    token = request.POST.get('token')
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+
+    user_id = get_token_info(token)['id']
+
+    last_loan_id = models.get_last_loan_id() + 1
+    
+    anual_income = request.FILES.get('annual_income')
+    self_declaration = request.FILES.get('self_declaration')
+
+    if anual_income is None or self_declaration is None:
+        return Response({'message': 'Please upload all required documents'}, status=400)
+    
+    if anual_income.size > 1000000 or self_declaration.size > 1000000:
+        return Response({'message': 'Files must not exceed 1 MB'}, status=400)
+    
+    # Upload the files to S3 irsplusdeclaration, create a folder with the user_id and upload the files there
+    s3.upload_fileobj(anual_income, 'irsplusdeclaration', f'{user_id}/{last_loan_id}/anual_income.pdf')
+    s3.upload_fileobj(self_declaration, 'irsplusdeclaration', f'{user_id}/{last_loan_id}/self_declaration.pdf')
+
+    return Response({'confirmation': 'Documents submitted successfully!'})
+
 # Loan application endpoint
 @api_view(['POST'])
 def loan_apply(request):
+    token = request.data.get('token')
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in, and try to apply for a loan again'})
+    
+    user_id = get_token_info(token)['id']
+
     try:
         # Extract income and expenses
-        income = float(request.data.get('income'))
-        expenses = float(request.data.get('expenses'))
-        
+        yearly_income = float(request.data.get('yearly_income'))
         amount = float(request.data.get('amount'))
         duration = int(request.data.get('duration'))
-
-        # user id
-        user_id = request.data.get('user_id')
-
-        # Simulate credit score calculation
-        # credit_score = int((income - expenses) / 100)
-        # print(f"Credit score: {credit_score}")
+        monthly_payment = float(request.data.get('monthly_payment'))
+        answer = request.data.get('answer')
 
         # Create a unique execution name
         execution_name = f"loan-{uuid.uuid4()}"
 
         # Start Step Functions execution
         response = Step_function_client.start_execution(
-            stateMachineArn=Step_function_LoanResult_arn,
+            stateMachineArn=Step_function_LoanResultRDS_arn,
             name=execution_name,
-            input=f'{{"income": {income}, "expenses": {expenses}, "amount": {amount}, "duration": {duration}, "user_id": "{user_id}"}}'
+            input=f'{{"yearly_income": {yearly_income}, "amount": {amount}, "duration": {duration}, "monthly_payment": {monthly_payment}, "answer": "{answer}", "user_id": "{user_id}"}}'
         )
         execution_arn = response["executionArn"]
 
@@ -196,20 +286,14 @@ def loan_apply(request):
             )
             status = execution_response["status"]
             
-            if status == "SUCCEEDED":
-                # Parse the result
-                result = execution_response["output"]
+            if status == 200:
                 return Response({
-                    "message": "Loan application processed successfully!",
-                    "Result": result
+                    "confirmation": "Loan application processed successfully!"
                 })
             elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
                 return Response({
                     "error": f"Step Functions execution failed with status: {status}"
                 }, status=500)
-            
-            # Wait before polling again
-            time.sleep(2)
 
     except Exception as e:
         print("An error occurred: ", e)

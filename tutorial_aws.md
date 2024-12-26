@@ -56,6 +56,20 @@ VALUES
     ('Ivo', 'ivo@gmail.com', '123456', TRUE);
 
 
+CREATE TABLE Loans (
+    loan_id INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for the loan
+    user_id INT NOT NULL, -- Identifier for the user
+    yearly_income DECIMAL(15, 2) NOT NULL, -- User's yearly income
+    amount DECIMAL(15, 2) NOT NULL, -- Loan amount
+    duration INT NOT NULL, -- Loan duration in months or years
+    monthly_payment DECIMAL(15, 2) NOT NULL, -- Monthly payment amount
+    answer VARCHAR(255), -- Approval/rejection status or reason
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- Record creation date
+    amount_paid DECIMAL(15, 2) DEFAULT 0, -- Amount paid so far
+    loan_officer VARCHAR(255) DEFAULT 'Pending...' -- Assigned loan officer
+);
+
+
 -----
 face rekognition (https://medium.com/cloudnloud/build-your-own-face-recognition-service-using-amazon-rekognition-c75919d7f66e)
 

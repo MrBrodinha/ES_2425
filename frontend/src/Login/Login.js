@@ -33,7 +33,7 @@ const Login = () =>
         setError(null);
 
         // Simulate login API request
-        fetch("/api/login", {
+        fetch(process.env.REACT_APP_API_URL + "/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, photo: imgSrc }),
@@ -49,11 +49,17 @@ const Login = () =>
             })
             .then((data) =>
             {
-                console.log("Response data:", data); // Log the received data
                 if (data.username)
                 {
                     alert(`Welcome, ${ data.username }!`);
+
+                    const token = data.token;
+
+                    localStorage.setItem("token", token);
+
                     setLoading(false);
+
+                    window.location.href = "/"; // Redirect to home page
                 } else
                 {
                     setError(data.message || "An error occurred");

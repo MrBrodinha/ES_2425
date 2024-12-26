@@ -28,7 +28,6 @@ router = routers.DefaultRouter()
 urlpatterns = [
     # react
     path('', TemplateView.as_view(template_name='index.html')),
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 
     # api
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
@@ -42,5 +41,10 @@ urlpatterns = [
     path("api/loan/update", views.update_loan_status, name="update_loan_status"),
     path("api/interview/select", views.select_interview_slot, name="select_interview_slot"),
     path("api/interview/set", views.set_interview_slots, name="set_interview_slots"),
-    path("test/", views.test, name="test")
+    path("api/loan/verify_face", views.verify_face, name="verify_face"),
+    path("api/loan/submit_documents", views.submit_documents, name="submit_documents"),
+    path("test/", views.test, name="test"),
+
+    # react
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))
 ]

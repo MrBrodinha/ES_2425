@@ -25,4 +25,10 @@ def get_client_by_email(email):
         cursor.execute(f"SELECT * FROM clients WHERE email = '{email}'")
         return cursor.fetchone()
     
+
+def get_last_loan_id():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT MAX(loan_id) FROM Loans")
+        return cursor.fetchone()[0]
+    
     

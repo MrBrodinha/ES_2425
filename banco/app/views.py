@@ -1,35 +1,28 @@
-from rest_framework import permissions, viewsets
 from django.shortcuts import render
-
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.http import JsonResponse
-
+from . import models
 import json
-
 import boto3
 import uuid
-
 import time
-
-from . import models
 import jwt
-
 import base64
 
-import os
 
 # AWS Config
-Step_function_LoanResult_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResult'
-Step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanSimulate'
-Step_function_LoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanStatus'
-Step_function_SelectInterviewSlot_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SelectInterviewSlot'
-Step_function_SetInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SetInterviewSlots'
-Step_function_GetLoans_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:GetLoans'
-Step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatus'
-Step_function_LoanResultRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResultRDS'
+step_function_LoanResultRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanResultRDS'
+step_function_LoanSimulate_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanSimulate'
+step_function_LoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:LoanStatus'
+step_function_SelectInterviewSlot_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SelectInterviewSlot'
+step_function_SetInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:SetInterviewSlots'
+step_function_GetLoans_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:GetLoans'
+step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatus'
+step_function_UpdateLoanAmountPaid_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanAmountPaid'
+step_function_UpdateInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateInterviewSlots'
 
-Step_function_client = boto3.client(
+
+step_function = boto3.client(
     'stepfunctions',
     region_name='us-east-1'
 )
@@ -67,37 +60,20 @@ def get_token_info(token):
     except jwt.ExpiredSignatureError:
         return False
 
-# get all users
-@api_view(['GET'])
-def get_all_users(request):
-    users = User.objects.all()
-    data = UserSerializer(users, many=True).data
-    return Response(data)
-
-@api_view(['GET'])
-# index page
-def index(request):
-    data = { 'message': 'Hello 123' }
-    return Response(data)
-
-@api_view(['GET'])
-# home page
-def home(request):
-    return Response({'message': 'Welcome to the home page'})
-
 @api_view(['POST'])
+# Login user
 def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
     image = request.data.get('photo')
 
-    client = models.get_client_by_email(email)
+    user = models.get_user_by_email(email)
 
-    if client is None:
+    if user is None:
         return Response({'message': 'User not found'})
 
     else:
-        if client[3] == password:
+        if user[3] == password:
             
             if ',' in image:
                 image = image.split(',')[1]
@@ -120,18 +96,23 @@ def login(request):
                     Key={'RekognitionId': {'S': match['Face']['FaceId']}}
                     )
                 
-                if 'Item' in face and face['Item']['FullName']['S'] == client[1]:
+                if 'Item' in face and face['Item']['FullName']['S'] == user[1]:
                     found = True
                     break
 
             if not found:
                 return Response({'message': 'Person cannot be recognized'})
+            
+            # expiration time
+            exp = time.time() + 60*60*4
 
             token = {
-                'id': client[0],
-                'username': client[1],
-                'email': client[2],
-                'hasPermission': client[4]
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'credit_score': float(user[4]),
+                'hasPermission': user[5],
+                'exp': exp
             }
 
             key = 'AlgoBueAleatoriolol'
@@ -139,13 +120,14 @@ def login(request):
             #obtain token from token
             token = jwt.encode(token, key, algorithm='HS256')
 
-            return Response({'username': f'{client[1]}',
+            return Response({'username': f'{user[1]}',
                              'token': token}) 
         else:
             return Response({'message': 'Wrong password'})
         
 
 @api_view(['POST'])
+# verifies face
 def verify_face(request):
     image = request.data.get('photo')
     token = request.data.get('token')
@@ -196,8 +178,8 @@ def loan_simulate(request):
     execution_name = f"loan-{uuid.uuid4()}"
 
     # Start Step Functions execution
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_LoanSimulate_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_LoanSimulate_arn,
         name=execution_name,
         input=f'{{"amount":{amount},"duration":{duration},"yearly_income":{yearly_income}}}'
     )
@@ -205,7 +187,7 @@ def loan_simulate(request):
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -234,7 +216,12 @@ def submit_documents(request):
 
     user_id = get_token_info(token)['id']
 
-    last_loan_id = models.get_last_loan_id() + 1
+    last_load_id = models.get_last_loan_id()
+
+    if last_load_id is None:
+        loan_id = 1
+    else:
+        loan_id = last_load_id + 1
     
     anual_income = request.FILES.get('annual_income')
     self_declaration = request.FILES.get('self_declaration')
@@ -246,8 +233,8 @@ def submit_documents(request):
         return Response({'message': 'Files must not exceed 1 MB'}, status=400)
     
     # Upload the files to S3 irsplusdeclaration, create a folder with the user_id and upload the files there
-    s3.upload_fileobj(anual_income, 'irsplusdeclaration', f'{user_id}/{last_loan_id}/anual_income.pdf')
-    s3.upload_fileobj(self_declaration, 'irsplusdeclaration', f'{user_id}/{last_loan_id}/self_declaration.pdf')
+    s3.upload_fileobj(anual_income, 'irsplusdeclaration', f'{user_id}/{loan_id}/anual_income.pdf')
+    s3.upload_fileobj(self_declaration, 'irsplusdeclaration', f'{user_id}/{loan_id}/self_declaration.pdf')
 
     return Response({'confirmation': 'Documents submitted successfully!'})
 
@@ -268,12 +255,17 @@ def loan_apply(request):
         monthly_payment = float(request.data.get('monthly_payment'))
         answer = request.data.get('answer')
 
+        if answer == "ACCEPTED":
+            answer = "TO BE ACCEPTED"
+        elif answer == "UNABLE TO DECIDE ALONE":
+            answer = "INTERVIEW REQUIRED"
+
         # Create a unique execution name
         execution_name = f"loan-{uuid.uuid4()}"
 
         # Start Step Functions execution
-        response = Step_function_client.start_execution(
-            stateMachineArn=Step_function_LoanResultRDS_arn,
+        response = step_function.start_execution(
+            stateMachineArn=step_function_LoanResultRDS_arn,
             name=execution_name,
             input=f'{{"yearly_income": {yearly_income}, "amount": {amount}, "duration": {duration}, "monthly_payment": {monthly_payment}, "answer": "{answer}", "user_id": "{user_id}"}}'
         )
@@ -281,7 +273,7 @@ def loan_apply(request):
 
         # Poll for execution result
         while True:
-            execution_response = Step_function_client.describe_execution(
+            execution_response = step_function.describe_execution(
                 executionArn=execution_arn
             )
             status = execution_response["status"]
@@ -299,26 +291,56 @@ def loan_apply(request):
         print("An error occurred: ", e)
         return Response({"error": str(e)}, status=500)
 
-# Allows clients to check the status of their loan application.
+# Allows clients to check the status of their loans application.
 @api_view(['GET'])
-def loan_status(request):
+def get_loans(request):
+    token = request.GET.get('token', None)
 
-    loan_id = request.GET.get('loan_id')
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
     
+    loan_id = request.GET.get('loan_id', None)
+
+    if loan_id is None:
+        user_id = get_token_info(token)['id']
+        loans_status = models.get_loans_by_user_id(user_id)
+
+        if loans_status is None:
+            return Response({'message': 'No loans found for this user.'})
+
+        return Response({'loans_status': loans_status})
+    
+    else:
+        loan_status = models.get_loan_by_id(loan_id)
+        if loan_status is None:
+            return Response({'message': 'No loan found with this id.'})
+
+        return Response({'loan_status': loan_status})
+
+@api_view(['PUT'])
+def update_loan_amount_paid(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+
+    loan_id = request.data.get('loan_id')
+
     # Create a unique execution name
     execution_name = f"loan-{uuid.uuid4()}"
 
     # Start Step Functions execution
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_LoanStatus_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_UpdateLoanAmountPaid_arn,
         name=execution_name,
         input=f'{{"loan_id": "{loan_id}"}}'
     )
+
     execution_arn = response["executionArn"]
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -327,7 +349,7 @@ def loan_status(request):
             # Parse the result
             result = execution_response["output"]
             return Response({
-                "message": "Loan status processed successfully!",
+                "confirm": "Loan amount paid updated successfully!",
                 "Result": result
             })
         elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
@@ -338,6 +360,66 @@ def loan_status(request):
         # Wait before polling again
         time.sleep(2)
 
+@api_view(['GET'])
+def get_interviews(request):
+    token = request.GET.get('token', None)
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+
+    loan_id = request.GET.get('loan_id')
+
+    interviews = models.get_slot_interviews_by_loan_id(loan_id)
+
+    return Response({'interviews': interviews})
+
+@api_view(['PUT'])
+def choose_interview_slot(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    loan_id = request.data.get('loan_id')
+    interview_id = request.data.get('interview_id')
+
+    models.update_loan_status_by_loan_id(loan_id, "INTERVIEW PENDING")
+
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    response = step_function.start_execution(
+        stateMachineArn=step_function_UpdateInterviewSlots_arn,
+        name=execution_name,
+        input=f'{{"loan_id": "{loan_id}", "interview_id": "{interview_id}"}}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = step_function.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "confirm": "Interview slot selected successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
+
+
 # Allows clients to select an interview slot.
 @api_view(['POST'])
 def select_interview_slot(request):
@@ -346,8 +428,8 @@ def select_interview_slot(request):
 
     # Create a unique execution name
     execution_name = f"loan-{uuid.uuid4()}"
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_SelectInterviewSlot_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_SelectInterviewSlot_arn,
         name=execution_name,
         input=f'{{"loan_id": "{loan_id}", "slot_id": "{slot_id}"}}'
     )
@@ -356,7 +438,7 @@ def select_interview_slot(request):
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -402,8 +484,8 @@ def set_interview_slots(request):
     json_input = json.dumps(input_data)
 
     # Start the Step Function execution
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_SetInterviewSlots_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_SetInterviewSlots_arn,
         name=execution_name,
         input=json_input  # Pass the serialized JSON input
     )
@@ -412,7 +494,7 @@ def set_interview_slots(request):
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -440,8 +522,8 @@ def get_all_loans(request):
     execution_name = f"loan-{uuid.uuid4()}"
 
     # Start Step Functions execution
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_GetLoans_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_GetLoans_arn,
         name=execution_name,
         input='{}'
     )
@@ -449,7 +531,7 @@ def get_all_loans(request):
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -480,8 +562,8 @@ def update_loan_status(request):
     execution_name = f"loan-{uuid.uuid4()}"
 
     # Start Step Functions execution
-    response = Step_function_client.start_execution(
-        stateMachineArn=Step_function_UdpateLoanStatus_arn,
+    response = step_function.start_execution(
+        stateMachineArn=step_function_UdpateLoanStatus_arn,
         name=execution_name,
         input=f'{{"loan_id": "{loan_id}", "loan_status": "{loan_status}"}}'
     )
@@ -490,7 +572,7 @@ def update_loan_status(request):
 
     # Poll for execution result
     while True:
-        execution_response = Step_function_client.describe_execution(
+        execution_response = step_function.describe_execution(
             executionArn=execution_arn
         )
         status = execution_response["status"]
@@ -509,7 +591,3 @@ def update_loan_status(request):
         
         # Wait before polling again
         time.sleep(2)
-
-
-def test(request):
-    return render(request, 'test.html')

@@ -30,20 +30,22 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html')),
 
     # api
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path("api/login", views.login, name="login"),
-    path("api/home", views.home, name="home"),
-    path("api/users", views.get_all_users, name="get_all_users"),
-    path("api/loans", views.get_all_loans, name="get_all_loans"),
+    path("api/loans", views.get_loans, name="get_loans"),
     path("api/loan/simulate", views.loan_simulate, name="loan_simulate"),
     path("api/loan/apply", views.loan_apply, name="loan_apply"),
-    path("api/loan/status", views.loan_status, name="loan_status"),
+    path("api/loan/verify_face", views.verify_face, name="verify_face"),
+    path("api/loan/submit_documents", views.submit_documents, name="submit_documents"),
+    path("api/loan/pay", views.update_loan_amount_paid, name="update_loan_amount_paid"),
+    path("api/loan/interviews", views.get_interviews, name="get_interviews"),
+    path("api/loan/interviews/chosen", views.choose_interview_slot, name="choose_interview_slot"),
+    
+    
+    #path("api/loan/status", views.loan_status, name="loan_status"),
     path("api/loan/update", views.update_loan_status, name="update_loan_status"),
     path("api/interview/select", views.select_interview_slot, name="select_interview_slot"),
     path("api/interview/set", views.set_interview_slots, name="set_interview_slots"),
-    path("api/loan/verify_face", views.verify_face, name="verify_face"),
-    path("api/loan/submit_documents", views.submit_documents, name="submit_documents"),
-    path("test/", views.test, name="test"),
+    
 
     # react
     re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))

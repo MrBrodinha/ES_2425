@@ -40,23 +40,24 @@ inserir dados por algum canto (dbeaver, terminal, whatever)
 CREATE DATABASE users-info;
 
 -- Create the clients table
-CREATE TABLE clients (
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,             -- Auto-incrementing primary key
     username VARCHAR(150) NOT NULL,    -- Username field, max length 150
     email VARCHAR(255) UNIQUE NOT NULL, -- Email field, must be unique
     password VARCHAR(255) NOT NULL,    -- Password field, hashed
+    credit_score DECIMAL(15, 2) DEFAULT 0,
     hasPermissions BOOLEAN DEFAULT FALSE -- Permissions flag, default is FALSE
 );
 
 -- Insert some sample data
-INSERT INTO clients (username, email, password, hasPermissions)
+INSERT INTO users (username, email, password, hasPermissions)
 VALUES 
-    ('Filipe', 'filipe@gmail.com', '123456', FALSE),
+    ('Filipe', 'filipe@gmail.com', '123456', TRUE),
     ('Emanuel', 'Emanuel@gmail.com', '123456', FALSE),
-    ('Ivo', 'ivo@gmail.com', '123456', TRUE);
+    ('Ivo', 'ivo@gmail.com', '123456', FALSE);
 
 
-CREATE TABLE Loans (
+CREATE TABLE loans (
     loan_id INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for the loan
     user_id INT NOT NULL, -- Identifier for the user
     yearly_income DECIMAL(15, 2) NOT NULL, -- User's yearly income
@@ -66,8 +67,16 @@ CREATE TABLE Loans (
     answer VARCHAR(255), -- Approval/rejection status or reason
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- Record creation date
     amount_paid DECIMAL(15, 2) DEFAULT 0, -- Amount paid so far
-    loan_officer VARCHAR(255) DEFAULT 'Pending...' -- Assigned loan officer
+    loan_officer_id INT DEFAULT 0 -- Assigned loan officer
 );
+
+CREATE TABLE interview_slot (
+    id SERIAL PRIMARY KEY, -- Unique identifier for each slot
+    loan_id INT NOT NULL, -- Loan associated with the interview
+    is_slot_chosen BOOLEAN NOT NULL DEFAULT FALSE, -- Indicates if the slot is chosen
+    interview_day DATE NOT NULL, -- Date of the interview
+    interview_hour TIME NOT NULL -- Time of the interview
+)
 
 
 -----

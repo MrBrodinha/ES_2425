@@ -3,12 +3,9 @@ import pymysql
 def lambda_handler(event, context):
     try:
         # Extract input data
-        user_id = event.get("user_id", "")
-        yearly_income = float(event.get("yearly_income", 0))
-        amount = float(event.get("amount", 0))
-        duration = int(event.get("duration", 0))
-        monthly_payment = float(event.get("monthly_payment", 0))
-        answer = event.get("answer", "")
+        loan_id = event['loan_id']
+        interview_id = event['interview_id']
+
     except Exception as e:
         return {
             "statusCode": 400,
@@ -25,12 +22,21 @@ def lambda_handler(event, context):
         )
 
         with connection.cursor() as cursor:
-            cursor.execute(f"INSERT INTO Loans (user_id, yearly_income, amount, duration, monthly_payment, answer) VALUES ('{user_id}', {yearly_income}, {amount}, {duration}, {monthly_payment}, '{answer}')")
+            cursor.execute(f"""UPDATE interview_slot
+                                SET is_slot_chosen = TRUE
+                                WHERE loan_id = {loan_id} AND id = {interview_id}
+                                """)
+            connection.commit()
+
+        with connection.cursor() as cursor:
+            cursor.execute(f"""DELETE FROM interview_slot
+                                WHERE loan_id = {loan_id} AND is_slot_chosen = FALSE
+                                """)
             connection.commit()
     
         return {
             "statusCode": 200,
-            "message": "Loan request successfully submitted"
+            "message": "Interview updated successfully"
         }
     except Exception as e:
         return {

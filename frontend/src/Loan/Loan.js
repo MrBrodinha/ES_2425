@@ -8,6 +8,14 @@ const Loan = () =>
 {
     const token = localStorage.getItem("token");
 
+    useEffect(() =>
+    {
+        if (token)
+        {
+            setIsLoggedIn(true);
+        }
+    }, [ token ]);
+
     const [amount, setAmount] = useState(""); // Loan amount
     const [ duration, setDuration ] = useState(""); // Loan duration
     const [ yearly_income, setYearlyIncome ] = useState(""); // Yearly income
@@ -17,14 +25,6 @@ const Loan = () =>
     const [ isLoggedIn, setIsLoggedIn ] = useState(false);
     const [ nextDocument, setnextDocument ] = useState(false);
     const [ sendLoan, setSendLoan ] = useState(false);
-
-    useEffect(() =>
-    {
-        if (token)
-        {
-            setIsLoggedIn(true);
-        }
-    }, [ token ]);
     
     // webcam
     const webcamRef = useRef(null);
@@ -146,7 +146,8 @@ const Loan = () =>
             {
                 if (data.confirmation)
                 {
-                    setTimeout(() => { window.close(); }, 5000);
+                    alert("You can close this page now");
+                    window.location.href = "/";
                 } else
                 {
                     console.log(data);
@@ -183,18 +184,15 @@ const Loan = () =>
                     setSendLoan(true);
                     alert("Your Loan Request has been submitted, a loan officer will look into it");
                     submitLoan(e);
-                    window.open("/", "_blank");
 
                 } else
                 {
                     alert(data.message || "An error occurred");
                 }
-                setLoading(false);
             })
             .catch((err) =>
             {
                 alert("An error occurred during the document submission.");
-                setLoading(false);
             });
     };
 
@@ -245,12 +243,12 @@ const Loan = () =>
                         <p><strong>Estimated Monthly Payment:</strong> { simulationResult.monthly_payment }€</p>
 
                     {/* Show the "Proceed" button only if the answer is "accept" */ }
-                    { simulationResult.answer === "ACCEPTED" && isLoggedIn && !nextDocument && (
+                        { (simulationResult.answer === "ACCEPTED" || simulationResult.answer === "UNABLE TO DECIDE ALONE") && isLoggedIn && !nextDocument && (
                         <button onClick={ handleProceed }>Proceed with loan request</button>
                         ) }
-                    { simulationResult.answer === "ACCEPTED" && !isLoggedIn &&(
+                        { (simulationResult.answer === "ACCEPTED" || simulationResult.answer === "UNABLE TO DECIDE ALONE") && !isLoggedIn &&(
                         <button onClick={ handleProceed }>You need to Log in!</button>
-                    ) }
+                        ) }
                 </div>
                 ) }
                 
@@ -289,7 +287,7 @@ const Loan = () =>
                             <input type="file" accept=".pdf" required />
                             <label>Self Declaration</label>
                             <input type="file" accept=".pdf" required />
-                            <button type="submit" disable={ loading }>
+                            <button type="submit" disabled={ loading }>
                                 { loading ? "Uploading..." : "Upload" }
                             </button>
                         </form>
@@ -299,7 +297,6 @@ const Loan = () =>
                     //create empty page saying "DO NOT CLOSE THIS PAGE, IT WILL CLOSE ON ITS OWN"
                     <div className="send-loan">
                         <h2>Loan Request Sent</h2>
-                        <p>Do not close this page, it will close on its own</p>
                     </div>) }
             </div>
         </>

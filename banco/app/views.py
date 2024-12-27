@@ -21,6 +21,8 @@ step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stat
 step_function_UpdateLoanAmountPaid_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanAmountPaid'
 step_function_UpdateInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateInterviewSlots'
 
+step_function_UpdateLoanStatusRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatusRDS'
+
 
 step_function = boto3.client(
     'stepfunctions',
@@ -419,6 +421,56 @@ def choose_interview_slot(request):
         # Wait before polling again
         time.sleep(2)
 
+
+@api_view(['PUT'])
+def update_loan_statusRDS(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    flag_officer = get_token_info(token)['hasPermission']
+
+    if flag_officer != 1:
+        return Response({'message': 'You do not have permission to update loan status'})
+    
+    loan_id = request.data.get('loan_id')
+    answer = request.data.get('answer')
+    loan_officer_id = get_token_info(token)['id']
+
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    response = step_function.start_execution(
+        stateMachineArn=step_function_UpdateLoanStatusRDS_arn,
+        name=execution_name,
+        input=f'{{"loan_id": "{loan_id}", "answer": "{answer}", "loan_officer_id": "{loan_officer_id}"}}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = step_function.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "confirm": "Loan status updated successfully!",
+                "Result": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)
 
 # Allows clients to select an interview slot.
 @api_view(['POST'])

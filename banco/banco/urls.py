@@ -39,6 +39,7 @@ urlpatterns = [
     path("api/loan/pay", views.update_loan_amount_paid, name="update_loan_amount_paid"),
     path("api/loan/interviews", views.get_interviews, name="get_interviews"),
     path("api/loan/interviews/chosen", views.choose_interview_slot, name="choose_interview_slot"),
+    path("api/loan/assign", views.update_loan_statusRDS, name="update_loan_statusRDS"),
     
     
     #path("api/loan/status", views.loan_status, name="loan_status"),

@@ -8,7 +8,7 @@ const LoanDetails = () =>
 
     const token = localStorage.getItem("token");
     const [ isLoggedIn, setIsLoggedIn ] = useState(false);
-    const [ interviews, setInterviews ] = useState([]);
+    
 
     //GET loan_id
     const urlParams = new URLSearchParams(location.search);
@@ -16,78 +16,46 @@ const LoanDetails = () =>
 
     const [ loan, setLoan ] = useState(null); // Change loan state to object
 
-    // For interview
-    const [ selectedSlot, setSelectedSlot ] = useState(null);
-
-    const handleSlotSelect = (interviewId) =>
-    {
-        setSelectedSlot(interviewId === selectedSlot ? null : interviewId);
-    };
+    
 
     // UseEffect to fetch loan data once when the component is mounted or loan_id changes
     useEffect(() =>
     {
-        if (loan_id && token)
+        const fetchLoanData = async () =>
         {
-            fetch(process.env.REACT_APP_API_URL + "/api/loans?token=" + token + "&loan_id=" + loan_id)
-                .then((response) => response.json())
-                .then((data) =>
+            if (loan_id && token)
+            {
+                try
                 {
+                    const response = await fetch(`${ process.env.REACT_APP_API_URL }/api/loans?token=${ token }&loan_id=${ loan_id }`);
+                    const data = await response.json();
+
                     console.log("Fetched loan:", data);
+
                     if (data.loans_status)
                     {
+                        console.log("Setting loan data:", data.loans_status);
                         setLoan(data.loans_status);
+                    } else
+                    {
+                        console.error("Error fetching loan data:", data.message);
                     }
-                })
-                .catch((error) =>
+                } catch (error)
                 {
                     console.error("Error fetching loan data:", error);
-                });
+                }
+            }
+        };
+
+        // Fetch only when loan_id and token are valid and loan is not already set
+        if (!loan)
+        {
+            fetchLoanData();
         }
-    }, [ loan_id, token ]); // Run this effect only when loan_id or token changes
+    }, [ loan_id, token, loan ]);// Run this effect only when loan_id or token changes
 
     // Handle interview slot selection
-    const handleChosenInterview = async () =>
-    {
-        try
-        {
-            alert("Updating interview slot, could take a while...");
-            setInterviews([]);
-            const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interviews/chosen",
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ token: token, interview_id: selectedSlot, loan_id: loan.id }), // Assuming loan is an object with `id`
-                }
-            );
-            const data = await response.json();
-            if (data.confirm)
-            {
-                alert("Interview slot chosen successfully! Could take a while to reflect.");
-                window.location.reload();
-            } else
-            {
-                alert("Error choosing interview slot. Please try again later.");
-            }
-        } catch (error)
-        {
-            console.error("Error choosing interview slot:", error);
-        }
-    };
-
-    const handleButtonClick = () =>
-    {
-        if (selectedSlot !== null)
-        {
-            handleChosenInterview();
-        } else
-        {
-            alert("Please select an interview slot first.");
-        }
-    };
+    
 
     useEffect(() =>
     {
@@ -97,60 +65,11 @@ const LoanDetails = () =>
         }
     }, [ token ]); // Access the loan data from state
 
-    const handlePay = async () =>
-    {
-        alert("Loan payment is being processed, could take a while...");
-        try
-        {
-            const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/pay",
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ token: token, loan_id: loan.id }), // Assuming loan is an object with `id`
-                }
-            );
-            const data = await response.json();
-            if (data.message)
-            {
-                alert(data.message);
-                window.location.href = "/";
-            } else if (data.confirm)
-            {
-                alert("Loan paid successfully! Might take a few seconds to reflect.");
-                window.location.reload();
-            } else
-            {
-                alert("Error paying loan. Please try again later.");
-            }
-        } catch (error)
-        {
-            console.error("Error paying loan:", error);
-        }
-    };
+    
 
-    const handleGrabInterviews = async () =>
-    {
-        try
-        {
-            const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interviews?token=" + token + "&loan_id=" + loan.id
-            );
-            const data = await response.json();
-            if (data.interviews)
-            {
-                setInterviews(data.interviews);
-            }
-        } catch (error)
-        {
-            console.error("Error grabbing interviews:", error);
-        }
-    };
-
+    console.log(loan)
     if (!loan) return <div>Loading...</div>; // Show loading while fetching loan data
-
+ 
     return (
         <>
             <Navbar />

@@ -20,7 +20,6 @@ step_function_GetLoans_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine
 step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatus'
 step_function_UpdateLoanAmountPaid_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanAmountPaid'
 step_function_UpdateInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateInterviewSlots'
-
 step_function_UpdateLoanStatusRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatusRDS'
 
 
@@ -61,6 +60,21 @@ def get_token_info(token):
         return decoded
     except jwt.ExpiredSignatureError:
         return False
+
+@api_view(['GET'])
+# Check if user is a loan officer
+def is_loan_officer(request):
+    token = request.GET.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    hasPermission = get_token_info(token)['hasPermissions']
+
+    if hasPermission == 1:
+        return Response({'is_loan_officer': True})
+    else:
+        return Response({'is_loan_officer': False})
 
 @api_view(['POST'])
 # Login user
@@ -113,7 +127,7 @@ def login(request):
                 'username': user[1],
                 'email': user[2],
                 'credit_score': float(user[4]),
-                'hasPermission': user[5],
+                'hasPermissions': user[5],
                 'exp': exp
             }
 
@@ -123,6 +137,7 @@ def login(request):
             token = jwt.encode(token, key, algorithm='HS256')
 
             return Response({'username': f'{user[1]}',
+                             'hasPermissions': user[5],
                              'token': token}) 
         else:
             return Response({'message': 'Wrong password'})
@@ -260,7 +275,7 @@ def loan_apply(request):
         if answer == "ACCEPTED":
             answer = "TO BE ACCEPTED"
         elif answer == "UNABLE TO DECIDE ALONE":
-            answer = "INTERVIEW REQUIRED"
+            answer = "WAITING FOR LOAN OFFICER"
 
         # Create a unique execution name
         execution_name = f"loan-{uuid.uuid4()}"
@@ -423,13 +438,13 @@ def choose_interview_slot(request):
 
 
 @api_view(['PUT'])
-def update_loan_statusRDS(request):
+def update_loan_status(request):
     token = request.data.get('token')
 
     if not validate_token(token):
         return Response({'message': 'Invalid token, please log out and log in again'})
     
-    flag_officer = get_token_info(token)['hasPermission']
+    flag_officer = get_token_info(token)['hasPermissions']
 
     if flag_officer != 1:
         return Response({'message': 'You do not have permission to update loan status'})
@@ -472,174 +487,20 @@ def update_loan_statusRDS(request):
         # Wait before polling again
         time.sleep(2)
 
-# Allows clients to select an interview slot.
-@api_view(['POST'])
-def select_interview_slot(request):
-    loan_id = request.data.get('loan_id')
-    slot_id = request.data.get('slot_id')
-
-    # Create a unique execution name
-    execution_name = f"loan-{uuid.uuid4()}"
-    response = step_function.start_execution(
-        stateMachineArn=step_function_SelectInterviewSlot_arn,
-        name=execution_name,
-        input=f'{{"loan_id": "{loan_id}", "slot_id": "{slot_id}"}}'
-    )
-
-    execution_arn = response["executionArn"]
-
-    # Poll for execution result
-    while True:
-        execution_response = step_function.describe_execution(
-            executionArn=execution_arn
-        )
-        status = execution_response["status"]
-        
-        if status == "SUCCEEDED":
-            # Parse the result
-            result = execution_response["output"]
-            return Response({
-                "message": "Interview slot selected successfully!",
-                "Result": result
-            })
-        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
-            return Response({
-                "error": f"Step Functions execution failed with status: {status}"
-            }, status=500)
-        
-        # Wait before polling again
-        time.sleep(2)
-
-@api_view(['POST'])
-def set_interview_slots(request):
-    slots = request.data.get('slots')
-    loan_id = request.data.get('loan_id')
-
-    # Example slots: ["2021-10-01T09:00:00", "2021-10-01T10:00:00", "2021-10-01T11:00:00"]
-
-    print(f"Slots: {slots}")
-
-    # Ensure slots is a valid list
-    if not isinstance(slots, list):
-        return Response({"error": "Slots must be a list."}, status=400)
-
-    # Create a unique execution name
-    execution_name = f"loan-{uuid.uuid4()}"
-
-    # Properly serialize the input as JSON
-    input_data = {
-        "slots": slots,
-        "loan_id": loan_id
-    }
-
-    # Convert input_data to a JSON string
-    json_input = json.dumps(input_data)
-
-    # Start the Step Function execution
-    response = step_function.start_execution(
-        stateMachineArn=step_function_SetInterviewSlots_arn,
-        name=execution_name,
-        input=json_input  # Pass the serialized JSON input
-    )
-
-    execution_arn = response["executionArn"]
-
-    # Poll for execution result
-    while True:
-        execution_response = step_function.describe_execution(
-            executionArn=execution_arn
-        )
-        status = execution_response["status"]
-        
-        if status == "SUCCEEDED":
-            # Parse the result
-            result = execution_response["output"]
-            return Response({
-                "message": "Interview slots set successfully!",
-                "Result": result
-            })
-        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
-            return Response({
-                "error": f"Step Functions execution failed with status: {status}"
-            }, status=500)
-        
-        # Wait before polling again
-        time.sleep(2)
-
-# Get all loans
 @api_view(['GET'])
-def get_all_loans(request):
+def get_loans_by_officer(request):
+    token = request.GET.get('token', None)
+    loan_officer_id = request.GET.get('loan_officer_id', None)
 
-    # Create a unique execution name
-    execution_name = f"loan-{uuid.uuid4()}"
+    if (loan_officer_id == "1"):
+        loan_officer_id = get_token_info(token)['id']
 
-    # Start Step Functions execution
-    response = step_function.start_execution(
-        stateMachineArn=step_function_GetLoans_arn,
-        name=execution_name,
-        input='{}'
-    )
-    execution_arn = response["executionArn"]
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to view unassigned loans'})
 
-    # Poll for execution result
-    while True:
-        execution_response = step_function.describe_execution(
-            executionArn=execution_arn
-        )
-        status = execution_response["status"]
-        
-        if status == "SUCCEEDED":
-            # Parse the result
-            result = execution_response["output"]
-            return Response({
-                "message": "Get Loans processed successfully!",
-                "Result": result
-            })
-        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
-            return Response({
-                "error": f"Step Functions execution failed with status: {status}"
-            }, status=500)
-        
-        # Wait before polling again
-        time.sleep(2)
+    loans = models.get_loans_by_officer_id(loan_officer_id)
 
-# Update loan status
-@api_view(['PUT'])
-def update_loan_status(request):
-
-    loan_id = request.data.get('loan_id')
-    loan_status = request.data.get('loan_status')
-
-    # Create a unique execution name
-    execution_name = f"loan-{uuid.uuid4()}"
-
-    # Start Step Functions execution
-    response = step_function.start_execution(
-        stateMachineArn=step_function_UdpateLoanStatus_arn,
-        name=execution_name,
-        input=f'{{"loan_id": "{loan_id}", "loan_status": "{loan_status}"}}'
-    )
-
-    execution_arn = response["executionArn"]
-
-    # Poll for execution result
-    while True:
-        execution_response = step_function.describe_execution(
-            executionArn=execution_arn
-        )
-        status = execution_response["status"]
-        
-        if status == "SUCCEEDED":
-            # Parse the result
-            result = execution_response["output"]
-            return Response({
-                "message": "Loan status updated successfully!",
-                "Result": result
-            })
-        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
-            return Response({
-                "error": f"Step Functions execution failed with status: {status}"
-            }, status=500)
-        
-        # Wait before polling again
-        time.sleep(2)
+    return Response({'loans': loans})

@@ -16,49 +16,32 @@ const Navbar = () =>
     const logout = () =>
     {
         localStorage.removeItem("token");
+        localStorage.removeItem("hasPermissions");
         window.location.href = "/";
     }
 
-    if (!isLoggedIn) {
-        return (
-            <nav className="navbar">
-                <div className="logo">
-                    <Link to="/">Aqua Bank</Link>
-                </div>
-                <ul className="nav-links">
-                    <li>
-                        <Link to="/">Home</Link>
-                    </li>
-                    <li>
-                        <Link to="/loan">Simulate Loans</Link>
-                    </li>
+    return (
+        <nav className="navbar">
+            <div className="logo">
+                <Link to="/">Aqua Bank</Link>
+            </div>
+            <ul className="nav-links">
+                <li>
+                    <Link to="/">Home</Link>
+                </li>
+                { !isLoggedIn && (
                     <li>
                         <Link to="/login">Login</Link>
                     </li>
-
-                </ul>
-            </nav>
-        );
-    } else {
-        return (
-            <nav className="navbar">
-                <div className="logo">
-                    <Link to="/">Aqua Bank</Link>
-                </div>
-                <ul className="nav-links">
+                ) }
+                { isLoggedIn && (
                     <li>
-                        <Link to="/">Home</Link>
+                        <Link to="/" onClick={ logout }>Logout</Link>
                     </li>
-                    <li>
-                        <Link to="/loan">Simulate Loans</Link>
-                    </li>
-                    <li>
-                        <Link to="/" onClick={logout}>Logout</Link>
-                    </li>
-                </ul>
-            </nav>
-        );
-    }
+                ) }
+            </ul>
+        </nav>
+    );
 };
 
 export default Navbar;

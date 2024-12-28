@@ -39,13 +39,9 @@ urlpatterns = [
     path("api/loan/pay", views.update_loan_amount_paid, name="update_loan_amount_paid"),
     path("api/loan/interviews", views.get_interviews, name="get_interviews"),
     path("api/loan/interviews/chosen", views.choose_interview_slot, name="choose_interview_slot"),
-    path("api/loan/assign", views.update_loan_statusRDS, name="update_loan_statusRDS"),
-    
-    
-    #path("api/loan/status", views.loan_status, name="loan_status"),
-    path("api/loan/update", views.update_loan_status, name="update_loan_status"),
-    path("api/interview/select", views.select_interview_slot, name="select_interview_slot"),
-    path("api/interview/set", views.set_interview_slots, name="set_interview_slots"),
+    path("api/loan/assign", views.update_loan_status, name="update_loan_status"),
+    path("api/verify", views.is_loan_officer, name="is_loan_officer"),
+    path("api/loan_officer/loans", views.get_loans_by_officer, name="get_loans_by_officer"),
     
 
     # react

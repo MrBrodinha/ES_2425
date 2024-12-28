@@ -56,6 +56,7 @@ const Login = () =>
                     const token = data.token;
 
                     localStorage.setItem("token", token);
+                    localStorage.setItem("hasPermissions", data.hasPermissions);
 
                     setLoading(false);
 

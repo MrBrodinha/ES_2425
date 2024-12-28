@@ -1,5 +1,4 @@
 # Create your models here.
-from django.db import models
 import pymysql
 
 connection = pymysql.connect(
@@ -31,11 +30,6 @@ def get_last_loan_id():
         cursor.execute("SELECT MAX(loan_id) FROM loans")
         return cursor.fetchone()[0]
     
-def get_unassigned_loans():
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT * FROM loans WHERE loan_officer_id = 0")
-        return cursor.fetchall()
-    
 def get_loans_by_officer_id(loan_officer_id):
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT * FROM loans WHERE loan_officer_id = {loan_officer_id}")
@@ -44,7 +38,7 @@ def get_loans_by_officer_id(loan_officer_id):
 def get_loan_by_id(loan_id):
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT * FROM loans WHERE loan_id = {loan_id}")
-        return cursor.fetchall()
+        return cursor.fetchone()
 
 def get_loans_by_user_id(user_id):
     with connection.cursor() as cursor:

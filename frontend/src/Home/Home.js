@@ -6,11 +6,9 @@ import "./Home.css";
 const Home = () =>
 {
     const token = localStorage.getItem("token");
-
+    const hasPermissions = localStorage.getItem("hasPermissions");
     const [ isLoggedIn, setIsLoggedIn ] = useState(false);
-    const [ hasLoans, setHasLoans ] = useState(false);
-    const [ loans , setLoans ] = useState([]);
-    
+
     useEffect(() =>
     {
         if (token)
@@ -19,60 +17,330 @@ const Home = () =>
         }
     }, [ token ]);
 
-    useEffect(() =>
+    const [ hasLoans, setHasLoans ] = useState(false);
+    const [ loans, setLoans ] = useState([]);
+
+    const [ hasEmptyLoans, setHasEmptyLoans ] = useState(false);
+    const [ emptyLoans, setEmptyLoans ] = useState([]);
+
+    const [ isSingleLoan, setIsSingleLoan ] = useState(false);
+    const [ singleLoan, setSingleLoan ] = useState([]);
+
+    // For interview
+    const [ selectedSlot, setSelectedSlot ] = useState(null);
+    const [ interviews, setInterviews ] = useState([]);
+
+    // LOAN OFFICER --------------------------------------
+
+    const handleNewLoanCheck = async (loan_officer_id) =>
     {
-        const handleLoanCheck = async () =>
+        try
         {
-            try
+            const response = await fetch(
+                process.env.REACT_APP_API_URL + '/api/loan_officer/loans?token=' + token + '&loan_officer_id=' + loan_officer_id);
+            const data = await response.json();
+            console.log('Fetched loans:', data);  // Log the fetched data
+            if (data.loans)
             {
-                const response = await fetch(
-                    process.env.REACT_APP_API_URL + '/api/loans?token=' + token);
-                const data = await response.json();
-                console.log('Fetched loans:', data);  // Log the fetched data
-                if (data.loans_status)
+                if (loan_officer_id === 0)
+                {
+                    setHasEmptyLoans(true);
+                    setEmptyLoans(data.loans);
+                } else
                 {
                     setHasLoans(true);
-                    setLoans(data.loans_status);
+                    setLoans(data.loans);
                 }
-            } catch (error)
-            {
-                console.error("Error fetching loans:", error);
             }
-        };
-
-        if (isLoggedIn)
+        } catch (error)
         {
-            handleLoanCheck();
+            console.error("Error fetching loans:", error);
         }
-    }, [ isLoggedIn, token ]);
+    }
 
-    const handleLoanClick = (loan) =>
+    if (hasPermissions === "1")
     {
-        window.location.href = "/LoanDetails?loan_id=" + loan;
+        return (
+            <>
+                <Navbar />
+                <div className="home-container">
+                    <div className="home-hero">
+                        <h1>Welcome Loan Officer</h1>
+                        <p>Navigating Lending Success with Aqua Bank!</p>
+                        <div className="home-buttons">
+                            { !hasEmptyLoans && !hasLoans && (
+                                <button onClick={ () => handleNewLoanCheck(0) }>Show New Loan Applications</button>
+                            ) }
+                            { hasEmptyLoans && (
+                                <button onClick={ () =>
+                                {
+                                    setHasEmptyLoans(false);
+                                    setEmptyLoans([]);
+                                } }>Hide New Loan Applications</button>
+                            ) }
+                            <br></br>
+                            { !hasLoans && !hasEmptyLoans && (
+                                <button onClick={ () => handleNewLoanCheck(1) }>Show Associated Loan Applications</button>
+                            ) }
+                            { hasLoans && (
+                                <button onClick={ () =>
+                                {
+                                    setHasLoans(false);
+                                    setLoans([]);
+                                }
+                                }>Hide Associated Loan Applications</button>
+                            ) }
+                            { hasLoans && !isSingleLoan && (
+                                <div className="home-features">
+                                    <h2>Your Associated Loan Applications</h2>
+                                    <div className="features-grid">
+                                        { loans.map((loan, index) => (
+                                            <div className="feature-item"
+                                                key={ index }
+                                                onClick={ () =>
+                                                {
+                                                    handleLoanClick(loan[ 0 ]);
+                                                } }
+                                                style={ { cursor: "pointer", border: "1px solid #ccc", padding: "10px", margin: "10px" } } >
+                                                <h3>Loan ID: { loan[ 0 ] }</h3>
+                                                <p><strong>Client ID:</strong> { loan[ 1 ] }</p>
+                                                <p><strong>Status:</strong> { loan[ 6 ] }</p>
+                                                <p>------</p>
+                                                <p><strong>Amount:</strong> ${ loan[ 3 ] }</p>
+                                                <p><strong>Duration:</strong> { loan[ 4 ] } months</p>
+                                                <p>------</p>
+                                                <p><strong>Monthly Payment:</strong> ${ loan[ 5 ] }</p>
+                                                <p><strong>Total Paid:</strong> ${ loan[ 8 ] }</p>
+                                                <p><strong>Total Payment:</strong> ${ loan[ 5 ] * loan[ 4 ] }</p>
+                                            </div>
+                                        )) }
+                                    </div>
+                                </div>
+                            ) }
+                            { hasEmptyLoans && !isSingleLoan && (
+                                <div className="home-features">
+                                    <h2>New Loan Applications</h2>
+                                    <div className="features-grid">
+                                        { emptyLoans.map((emptyLoans, index) => (
+                                            <div className="feature-item"
+                                                key={ index }
+                                                onClick={ () =>
+                                                {
+                                                    handleLoanClick(emptyLoans[ 0 ]);
+                                                } }
+                                                style={ { cursor: "pointer", border: "1px solid #ccc", padding: "10px", margin: "10px" } } >
+                                                <h3>Loan ID: { emptyLoans[ 0 ] }</h3>
+                                                <p><strong>Client ID:</strong> { emptyLoans[ 1 ] }</p>
+                                                <p><strong>Status:</strong> { emptyLoans[ 6 ] }</p>
+                                                <p>------</p>
+                                                <p><strong>Amount:</strong> ${ emptyLoans[ 3 ] }</p>
+                                                <p><strong>Duration:</strong> { emptyLoans[ 4 ] } months</p>
+                                                <p>------</p>
+                                                <p><strong>Monthly Payment:</strong> ${ emptyLoans[ 5 ] }</p>
+                                                <p><strong>Total Paid:</strong> ${ emptyLoans[ 8 ] }</p>
+                                                <p><strong>Total Payment:</strong> ${ emptyLoans[ 5 ] * emptyLoans[ 4 ] }</p>
+                                            </div>
+                                        )) }
+                                    </div>
+                                </div>
+                            ) }
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
+    }
+
+    // USER --------------------------------------
+
+    const handleSlotSelect = (interviewId) =>
+    {
+        setSelectedSlot(interviewId === selectedSlot ? null : interviewId);
     };
 
+    const handleLoanCheck = async () =>
+    {
+        try
+        {
+            const response = await fetch(
+                process.env.REACT_APP_API_URL + '/api/loans?token=' + token);
+            const data = await response.json();
+            console.log('Fetched loans:', data);  // Log the fetched data
+            if (data.loans_status)
+            {
+                setHasLoans(true);
+                setLoans(data.loans_status);
+            }
+        } catch (error)
+        {
+            console.error("Error fetching loans:", error);
+        }
+    };
+
+    const handleGrabInterviews = async () =>
+    {
+        try
+        {
+            const response = await fetch(
+                process.env.REACT_APP_API_URL + "/api/loan/interviews?token=" + token + "&loan_id=" + singleLoan[ 0 ]
+            );
+            const data = await response.json();
+            console.log("Fetched interviews:", data);
+            if (data.interviews)
+            {
+                setInterviews(data.interviews);
+            }
+        } catch (error)
+        {
+            console.error("Error grabbing interviews:", error);
+        }
+    };
+
+
+    const handleLoanClick = async (loan) =>
+    {
+        try
+        {
+            const response = await fetch(process.env.REACT_APP_API_URL + "/api/loans?token=" + token + "&loan_id=" + loan);
+            const data = await response.json();
+
+            console.log("Fetched loan:", data);
+
+            if (data.loan_status)
+            {
+                setSingleLoan(data.loan_status);
+                setIsSingleLoan(true);
+            } else
+            {
+                console.error("Error fetching loan data:", data.message);
+            }
+        } catch (error)
+        {
+            console.error("Error fetching loan data:", error);
+        }
+    };
+
+    const handleChosenInterview = async () =>
+    {
+        try
+        {
+            alert("Updating interview slot, could take a while...");
+            setInterviews([]);
+            const response = await fetch(
+                process.env.REACT_APP_API_URL + "/api/loan/interviews/chosen",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ token: token, interview_id: selectedSlot, loan_id: singleLoan[ 0 ] }), // Assuming loan is an object with `id`
+                }
+            );
+            const data = await response.json();
+            if (data.confirm)
+            {
+                alert("Interview slot chosen successfully! Could take a while to reflect.");
+                window.location.reload();
+            } else
+            {
+                alert("Error choosing interview slot. Please try again later.");
+            }
+        } catch (error)
+        {
+            console.error("Error choosing interview slot:", error);
+        }
+    };
+
+    const handleButtonClick = () =>
+    {
+        if (selectedSlot !== null)
+        {
+            handleChosenInterview();
+        } else
+        {
+            alert("Please select an interview slot first.");
+        }
+    };
+
+    const handlePay = async () =>
+    {
+        alert("Loan payment is being processed, could take a while...");
+        try
+        {
+            const response = await fetch(
+                process.env.REACT_APP_API_URL + "/api/loan/pay",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ token: token, loan_id: singleLoan[ 0 ] }), // Assuming loan is an object with `id`
+                }
+            );
+            const data = await response.json();
+            if (data.message)
+            {
+                alert(data.message);
+                window.location.href = "/";
+            } else if (data.confirm)
+            {
+                alert("Loan paid successfully! Might take a few seconds to reflect.");
+                window.location.reload();
+            } else
+            {
+                alert("Error paying loan. Please try again later.");
+            }
+        } catch (error)
+        {
+            console.error("Error paying loan:", error);
+        }
+    };
 
     return (
         <>
             <Navbar />
-            { !hasLoans && (
-                <div className="home-container">
-                    <div className="home-hero">
-                        <h1>Welcome to Aqua Bank</h1>
-                        <p>Your trusted partner for online loan applications.</p>
-                        <div className="home-buttons">
-                            <Link to="/loan" className="btn btn-primary">
-                                Start a Loan Simulation
+            <div className="home-container">
+                <div className="home-hero">
+                    <h1>Welcome to Aqua Bank</h1>
+                    <p>Your trusted partner for online loan applications.</p>
+                    <div className="home-buttons">
+                        <Link to="/loan" className="btn btn-primary">
+                            Start a Loan Simulation
+                        </Link>
+                        <br></br>
+                        { !isLoggedIn && (
+                            <Link to="/login" className="btn btn-secondary">
+                                Login to Your Account
                             </Link>
-                            <br></br>
-                            { !isLoggedIn && (
-                                <Link to="/login" className="btn btn-secondary">
-                                    Login to Your Account
-                                </Link>
-                            )}
-                                
-                        </div>
+                        ) }
+                        <br></br>
+                        { isLoggedIn && !hasLoans && !isSingleLoan && (
+                            <button onClick={ handleLoanCheck }>Show Loan Applications</button>
+                        ) }
+                        { isLoggedIn && hasLoans && !isSingleLoan && (
+                            <button onClick={ () =>
+                            {
+                                setHasLoans(false);
+                                setLoans([]);
+                            } }>
+                                Hide Loan Applications</button>
+                        ) }
+                        { isLoggedIn && isSingleLoan && (
+                            <button onClick={ () =>
+                            {
+                                setIsSingleLoan(false);
+                                setSingleLoan([]);
+                            }
+                            }>Hide Loan Details</button>
+                        )
+                        }
+
+                        { isSingleLoan && singleLoan[ 6 ] === "ACCEPTED" && singleLoan[ 8 ] < (singleLoan[ 5 ] * singleLoan[ 4 ]) && (
+                            <button className="btn btn-primary" onClick={ handlePay }>Pay</button>
+                        ) }
                     </div>
+                </div>
+                { !hasLoans && (
                     <div className="home-features">
                         <h2>Why Choose Us?</h2>
                         <div className="features-grid">
@@ -90,42 +358,104 @@ const Home = () =>
                             </div>
                         </div>
                     </div>
-                </div>
-            ) }
-            { hasLoans && (
-                <div className="home-container">
-                    <div className="home-hero">
-                        <div className="home-buttons">
-                            <Link to="/loan" className="btn btn-primary">
-                                Start a Loan Simulation
-                            </Link>
-                        </div>
-                    </div>
+                ) }
+                { hasLoans && !isSingleLoan && (
                     <div className="home-features">
                         <h2>Your Loan Applications</h2>
                         <div className="features-grid">
                             { loans.map((loan, index) => (
                                 <div className="feature-item"
                                     key={ index }
-                                    onClick={ () => handleLoanClick(loan[ 0 ]) }
+                                    onClick={ () =>
+                                    {
+                                        handleLoanClick(loan[ 0 ]);
+                                    } }
                                     style={ { cursor: "pointer", border: "1px solid #ccc", padding: "10px", margin: "10px" } } >
-                                        <h3>Loan ID: { loan[ 0 ] }</h3>
-                                        <p><strong>Status:</strong> { loan[ 6 ] }</p>
-                                        <p>------</p>
-                                        <p><strong>Amount:</strong> ${ loan[ 3 ] }</p>
-                                        <p><strong>Duration:</strong> { loan[ 4 ] } months</p>
-                                        <p>------</p>
-                                        <p><strong>Monthly Payment:</strong> ${ loan[ 5 ] }</p>
-                                        <p><strong>Total Paid:</strong> ${ loan[ 8 ] }</p>
-                                        <p><strong>Total Payment:</strong> ${ loan[ 5 ] * loan[ 4 ] }</p>
+                                    <h3>Loan ID: { loan[ 0 ] }</h3>
+                                    <p><strong>Status:</strong> { loan[ 6 ] }</p>
+                                    <p>------</p>
+                                    <p><strong>Amount:</strong> ${ loan[ 3 ] }</p>
+                                    <p><strong>Duration:</strong> { loan[ 4 ] } months</p>
+                                    <p>------</p>
+                                    <p><strong>Monthly Payment:</strong> ${ loan[ 5 ] }</p>
+                                    <p><strong>Total Paid:</strong> ${ loan[ 8 ] }</p>
+                                    <p><strong>Total Payment:</strong> ${ loan[ 5 ] * loan[ 4 ] }</p>
                                 </div>
                             )) }
                         </div>
                     </div>
-                </div>
-            )}
+                ) }
+                { isSingleLoan && (
+                    <div>
+                        <h2>Loan ID: { singleLoan[ 0 ] }</h2>
+                        <div className="home-features">
+                            <div className="feature-item">
+                                <p><strong>Status:</strong> { singleLoan[ 6 ] }</p>
+                                <p>------</p>
+                                <p><strong>Amount:</strong> ${ singleLoan[ 3 ] }</p>
+                                <p><strong>Duration:</strong> { singleLoan[ 4 ] } months</p>
+                                <p>------</p>
+                                <p><strong>Monthly Payment:</strong> ${ singleLoan[ 5 ] }</p>
+                                <p><strong>Total Paid:</strong> ${ singleLoan[ 8 ] }</p>
+                                <p><strong>Total Payment:</strong> ${ singleLoan[ 5 ] * singleLoan[ 4 ] }</p>
+                            </div>
+                        </div>
+                    </div>) }
+
+                { isSingleLoan && singleLoan[ 6 ] === "INTERVIEW REQUIRED" && (
+                    <button className="btn btn-primary" onClick={ handleGrabInterviews }>Grab Interviews</button>
+                ) }
+
+                { isSingleLoan && singleLoan[ 6 ] === "INTERVIEW PENDING" && (
+                    <button className="btn btn-primary" onClick={ handleGrabInterviews }>Show Interview</button>
+                ) }
+
+                { isSingleLoan && interviews.length > 0 && singleLoan[ 6 ] === "INTERVIEW REQUIRED" && (
+                    <div>
+                        <h2>Interview</h2>
+                        { interviews.map((interview) => (
+                            <div className="home-features">
+                                <div className="feature-item">
+                                    <div key={ interview[ 0 ] }>
+                                        <p><strong>Day:</strong> { interview[ 3 ] }</p>
+                                        <p><strong>Time:</strong> { new Date((parseFloat(interview[ 4 ])) * 1000).toISOString().slice(11, 16) }</p>
+                                        <button
+                                            onClick={ () => handleSlotSelect(interview[ 0 ]) }
+                                            style={ {
+                                                backgroundColor: selectedSlot === interview[ 0 ] ? 'green' : 'lightgrey',
+                                                color: 'white'
+                                            } }
+                                        >
+                                            { selectedSlot === interview[ 0 ] ? 'Selected' : 'Select' }
+                                        </button>
+                                        <p>------</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )) }
+                        <button onClick={ handleButtonClick }>Confirm Selection</button>
+                    </div>
+                ) }
+
+                { isSingleLoan && interviews.length > 0 && singleLoan[ 6 ] === "INTERVIEW PENDING" && (
+                    <div>
+                        <h2>Interviews</h2>
+                        { interviews.map((interview) => (
+                            <div className="home-features">
+                                <div className="feature-item">
+                                    <div key={ interview[ 0 ] }>
+                                        <p><strong>Day:</strong> { interview[ 3 ] }</p>
+                                        <p><strong>Time:</strong> { new Date((parseFloat(interview[ 4 ])) * 1000).toISOString().slice(11, 16) }</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )) }
+                    </div>
+                ) }
+            </div>
         </>
     );
+
 };
 
 export default Home;

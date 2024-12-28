@@ -21,6 +21,7 @@ step_function_UdpateLoanStatus_arn = 'arn:aws:states:us-east-1:975050165416:stat
 step_function_UpdateLoanAmountPaid_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanAmountPaid'
 step_function_UpdateInterviewSlots_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateInterviewSlots'
 step_function_UpdateLoanStatusRDS_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:UpdateLoanStatusRDS'
+step_function_GetUsers_arn = 'arn:aws:states:us-east-1:975050165416:stateMachine:GetUsers'
 
 
 step_function = boto3.client(
@@ -504,3 +505,47 @@ def get_loans_by_officer(request):
     loans = models.get_loans_by_officer_id(loan_officer_id)
 
     return Response({'loans': loans})
+
+
+@api_view(['GET'])
+def get_users(request):
+    token = request.GET.get('token', None)
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to view users'})
+    
+    # Create a unique execution name
+    execution_name = f"loan-{uuid.uuid4()}"
+
+    # Start Step Functions execution
+    response = step_function.start_execution(
+        stateMachineArn=step_function_GetUsers_arn,
+        name=execution_name,
+        input='{}'
+    )
+
+    execution_arn = response["executionArn"]
+
+    # Poll for execution result
+    while True:
+        execution_response = step_function.describe_execution(
+            executionArn=execution_arn
+        )
+        status = execution_response["status"]
+        
+        if status == "SUCCEEDED":
+            # Parse the result
+            result = execution_response["output"]
+            return Response({
+                "users": result
+            })
+        elif status in ["FAILED", "TIMED_OUT", "ABORTED"]:
+            return Response({
+                "error": f"Step Functions execution failed with status: {status}"
+            }, status=500)
+        
+        # Wait before polling again
+        time.sleep(2)

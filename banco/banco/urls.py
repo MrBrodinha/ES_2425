@@ -42,7 +42,7 @@ urlpatterns = [
     path("api/loan/assign", views.update_loan_status, name="update_loan_status"),
     path("api/verify", views.is_loan_officer, name="is_loan_officer"),
     path("api/loan_officer/loans", views.get_loans_by_officer, name="get_loans_by_officer"),
-    
+    path("api/users", views.get_users, name="get_users"),
 
     # react
     re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))

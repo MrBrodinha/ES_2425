@@ -44,7 +44,7 @@ s3 = boto3.client(
     region_name='us-east-1'
 )
 
-#validate token
+# Validates token
 def validate_token(token):
     key = 'AlgoBueAleatoriolol'
     try:
@@ -53,7 +53,7 @@ def validate_token(token):
     except jwt.ExpiredSignatureError:
         return False
     
-#return token info
+# Returns token info
 def get_token_info(token):
     key = 'AlgoBueAleatoriolol'
     try:
@@ -62,8 +62,8 @@ def get_token_info(token):
     except jwt.ExpiredSignatureError:
         return False
 
-@api_view(['GET'])
 # Check if user is a loan officer
+@api_view(['GET'])
 def is_loan_officer(request):
     token = request.GET.get('token')
 
@@ -76,15 +76,24 @@ def is_loan_officer(request):
         return Response({'is_loan_officer': True})
     else:
         return Response({'is_loan_officer': False})
-    
-from PIL import Image
 
+# Logins user, by recieving an email, password and a photo
 @api_view(['POST'])
-# Login user
 def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    image = request.data.get('photo')
+
+    if (request.FILES.get('uploadedPhoto') != None):
+        image = request.FILES.get('uploadedPhoto')
+
+        image_bytes = image.read()
+    else:
+        image = request.data.get('photo')
+
+        if ',' in image:
+                image = image.split(',')[1]
+
+        image_bytes = base64.b64decode(image)
 
     user = models.get_user_by_email(email)
 
@@ -93,11 +102,6 @@ def login(request):
 
     else:
         if user[3] == password:
-            
-            if ',' in image:
-                image = image.split(',')[1]
-
-            image_bytes = base64.b64decode(image)
 
             try:
                 response = rekognition.search_faces_by_image(
@@ -146,21 +150,28 @@ def login(request):
             return Response({'message': 'Wrong password'})
         
 
+# Verifies face of person
 @api_view(['POST'])
-# verifies face
 def verify_face(request):
-    image = request.data.get('photo')
+
     token = request.data.get('token')
 
     if not validate_token(token):
         return Response({'message': 'Invalid token, please log out and log in again'})
     
+    if (request.FILES.get('uploadedPhoto') != None):
+        image = request.FILES.get('uploadedPhoto')
+
+        image_bytes = image.read()
+    else:
+        image = request.data.get('photo')
+
+        if ',' in image:
+                image = image.split(',')[1]
+
+        image_bytes = base64.b64decode(image)
+    
     username = get_token_info(token)['username']
-
-    if ',' in image:
-        image = image.split(',')[1]
-
-    image_bytes = base64.b64decode(image)
 
     try:
         response = rekognition.search_faces_by_image(
@@ -187,7 +198,7 @@ def verify_face(request):
         return Response({'message': 'Person cannot be recognized'})
 
     
-# Loan simulation endpoint
+# Simualates loan
 @api_view(['POST'])
 def loan_simulate(request):
     amount = float(request.data.get('amount'))
@@ -213,7 +224,6 @@ def loan_simulate(request):
         status = execution_response["status"]
         
         if status == "SUCCEEDED":
-            # Parse the result
             result = execution_response["output"]
                 
             return Response({
@@ -228,6 +238,7 @@ def loan_simulate(request):
         # Wait before polling again
         time.sleep(2)
 
+# Submits documents of a loan to S3 bucket
 @api_view(['POST'])
 def submit_documents(request):
     token = request.POST.get('token')
@@ -338,6 +349,7 @@ def get_loans(request):
 
         return Response({'loan_status': loan_status})
 
+# Updates amount paid to a loan
 @api_view(['PUT'])
 def update_loan_amount_paid(request):
     token = request.data.get('token')
@@ -384,6 +396,7 @@ def update_loan_amount_paid(request):
         # Wait before polling again
         time.sleep(2)
 
+# Retrives interviews from a loan
 @api_view(['GET'])
 def get_interviews(request):
     token = request.GET.get('token', None)
@@ -397,6 +410,7 @@ def get_interviews(request):
 
     return Response({'interviews': interviews})
 
+# Updates choosen interview
 @api_view(['PUT'])
 def choose_interview_slot(request):
     token = request.data.get('token')
@@ -447,6 +461,7 @@ def choose_interview_slot(request):
         time.sleep(2)
 
 
+# Updates loan status and links office loaner to it
 @api_view(['PUT'])
 def update_loan_status(request):
     token = request.data.get('token')
@@ -500,6 +515,8 @@ def update_loan_status(request):
         # Wait before polling again
         time.sleep(2)
 
+
+# Gets loans associated to loan officer
 @api_view(['GET'])
 def get_loans_by_officer(request):
     token = request.GET.get('token', None)

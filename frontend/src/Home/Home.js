@@ -212,6 +212,7 @@ const Home = () =>
             const data = await response.json();
             if (data.confirmation)
             {
+                handleGrabInterviews();
                 alert("Interview added successfully! Could take a while to reflect.");
             } else
             {
@@ -241,6 +242,7 @@ const Home = () =>
             const data = await response.json();
             if (data.confirmation)
             {
+                handleGrabInterviews();
                 alert("Interview removed successfully! Could take a while to reflect.");
             } else
             {

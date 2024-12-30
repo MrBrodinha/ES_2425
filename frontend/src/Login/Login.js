@@ -14,6 +14,8 @@ const Login = () =>
     const webcamRef = useRef(null);
     const [ imgSrc, setImgSrc ] = useState(null);
 
+    const [ uploadFile, setUploadFile ] = useState(null);
+
     // create a capture function
     const capture = useCallback(() =>
     {
@@ -32,11 +34,33 @@ const Login = () =>
         setLoading(true);
         setError(null);
 
+        // Check if the user has taken a photo or uploaded one
+        if (!imgSrc && !uploadFile)
+        {
+            setError("Please take a photo or upload one");
+            setLoading(false);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("email", email);
+        formData.append("password", password);
+
+        // Check if the user has uploaded a photo
+        if (uploadFile)
+        {
+            formData.append("uploadedPhoto", uploadFile);
+        }
+        else if (imgSrc)
+        {
+            formData.append("photo", imgSrc);
+        }
+
+
         // Simulate login API request
         fetch(process.env.REACT_APP_API_URL + "/api/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, photo: imgSrc }),
+            body: formData
         })
             .then((response) =>
             {
@@ -107,7 +131,7 @@ const Login = () =>
                                     objectFit: 'contain'
                                 } } />
                             ) : (
-                                    <Webcam screenshotFormat="image/jpeg" height="100%" width="100%" ref={ webcamRef } />
+                                <Webcam screenshotFormat="image/jpeg" height="100%" width="100%" ref={ webcamRef } />
                             ) }
                             <div className="btn-container">
                                 { imgSrc ? (
@@ -115,6 +139,11 @@ const Login = () =>
                                 ) : (
                                     <button type="button" onClick={ capture }>Capture photo</button>
                                 ) }
+                                <input type="file" accept="image/jpg" onChange={ (e) =>
+                                {
+                                    setUploadFile(e.target.files[ 0 ]);
+                                    setImgSrc(URL.createObjectURL(e.target.files[ 0 ]));;
+                                } } />
                             </div>
                         </div>
                         { error && <p className="error-message">{ error }</p> }

@@ -5,9 +5,9 @@ s3 = boto3.resource('s3')
 
 # List of images and associated names
 images = [
-    ('imagem1.jpg', 'Ivo'),
-    ('imagem2.jpg', 'Ivo'),
-    ('imagem3.jpg', 'Ivo'),
+    ('ivo1.jpg', 'Ivo'),
+    ('ivo2.jpg', 'Ivo'),
+    ('ivo3.jpg', 'Ivo'),
     ('emanuel1.jpg', 'Emanuel'),
     ('emanuel2.jpg', 'Emanuel'),
     ('emanuel3.jpg', 'Emanuel'),

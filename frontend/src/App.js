@@ -4,7 +4,6 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './Home/Home';
 import Login from './Login/Login';
 import Loan from './Loan/Loan';
-import LoanDetails from './LoanDetails/LoanDetails';
 
 function App() {
   return (

@@ -11,8 +11,6 @@ image_path = input("Enter path of the image to check: ")
 
 image = Image.open(image_path)
 
-print(image)
-
 stream = io.BytesIO()
 image.save(stream,format="JPEG")
 image_binary = stream.getvalue()

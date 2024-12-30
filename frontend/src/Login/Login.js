@@ -26,7 +26,7 @@ const Login = () =>
         setImgSrc(null);
     };
 
-    const handleLogin = (e) =>
+    const handleLogin = async (e) =>
     {
         e.preventDefault();
         setLoading(true);
@@ -75,7 +75,6 @@ const Login = () =>
             });
     };
 
-
     return (
         <><Navbar />
             <div className="login-container">
@@ -102,7 +101,11 @@ const Login = () =>
                         </div>
                         <div className="container" style={ { width: '100%', height: '100%' } }>
                             { imgSrc ? (
-                                <img src={ imgSrc } alt="webcam" />
+                                <img src={ imgSrc } alt="webcam" style={ {
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    objectFit: 'contain'
+                                } } />
                             ) : (
                                     <Webcam screenshotFormat="image/jpeg" height="100%" width="100%" ref={ webcamRef } />
                             ) }

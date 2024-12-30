@@ -76,6 +76,8 @@ def is_loan_officer(request):
         return Response({'is_loan_officer': True})
     else:
         return Response({'is_loan_officer': False})
+    
+from PIL import Image
 
 @api_view(['POST'])
 # Login user
@@ -103,7 +105,7 @@ def login(request):
                     Image={'Bytes':image_bytes}                                       
                 )
             except Exception as e:
-                return Response({'message': 'Face not found'})
+                return Response({'message': e})
 
             found = False
 
@@ -295,6 +297,7 @@ def loan_apply(request):
                 executionArn=execution_arn
             )
             status = execution_response["status"]
+            models.restart_connection()
             
             if status == 200:
                 return Response({
@@ -366,6 +369,9 @@ def update_loan_amount_paid(request):
         if status == "SUCCEEDED":
             # Parse the result
             result = execution_response["output"]
+
+            models.restart_connection()
+
             return Response({
                 "confirm": "Loan amount paid updated successfully!",
                 "Result": result
@@ -425,6 +431,9 @@ def choose_interview_slot(request):
         if status == "SUCCEEDED":
             # Parse the result
             result = execution_response["output"]
+
+            models.restart_connection()
+
             return Response({
                 "confirm": "Interview slot selected successfully!",
                 "Result": result
@@ -476,6 +485,9 @@ def update_loan_status(request):
         if status == "SUCCEEDED":
             # Parse the result
             result = execution_response["output"]
+
+            models.restart_connection()
+
             return Response({
                 "confirm": "Loan status updated successfully!",
                 "Result": result
@@ -549,3 +561,101 @@ def get_users(request):
         
         # Wait before polling again
         time.sleep(2)
+
+@api_view(['GET'])
+def get_single_user(request):
+    token = request.GET.get('token', None)
+    user_id = request.GET.get('user_id', None)
+    loan_id = request.GET.get('loan_id', None)
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to view users'})
+    
+    user = models.get_user_by_id(user_id)
+
+    anual_income_url = s3.generate_presigned_url(
+        ClientMethod='get_object',
+        Params={
+            'Bucket': 'irsplusdeclaration',
+            'Key': f'{user_id}/{loan_id}/anual_income.pdf'
+        }
+    )
+
+    self_declaration_url = s3.generate_presigned_url(
+        ClientMethod='get_object',
+        Params={
+            'Bucket': 'irsplusdeclaration',
+            'Key': f'{user_id}/{loan_id}/self_declaration.pdf'
+        },
+        ExpiresIn=600
+    )
+
+    return Response({
+        'user': {
+            'id': user[0],
+            'username': user[1],
+            'email': user[2],
+            'credit_score': user[4]
+        },
+        'anual_income_url': anual_income_url,
+        'self_declaration_url': self_declaration_url
+    })
+
+@api_view(['POST'])
+def add_interview(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to add interview slots'})
+    
+    loan_id = request.data.get('loan_id')
+    interview_day = request.data.get('interview_day')
+    interview_time = request.data.get('interview_time')
+
+    models.add_slot_interview(loan_id, interview_day, interview_time)
+
+    models.restart_connection()
+
+    return Response({'confirmation': 'Interview slot added successfully!'})
+
+@api_view(['DELETE'])
+def remove_interview(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to add interview slots'})
+    
+    slot_id = request.data.get('slot_id')
+
+    models.remove_slot_interview(slot_id)
+
+    models.restart_connection()
+
+    return Response({'confirmation': 'Interview slot removed successfully!'})
+
+@api_view(['DELETE'])
+def remove_interviews_from_loan(request):
+    token = request.data.get('token')
+
+    if not validate_token(token):
+        return Response({'message': 'Invalid token, please log out and log in again'})
+    
+    if get_token_info(token)['hasPermissions'] != 1:
+        return Response({'message': 'You do not have permission to add interview slots'})
+    
+    loan_id = request.data.get('loan_id')
+
+    models.remove_slots_interview_by_loan_id(loan_id)
+
+    models.restart_connection()
+
+    return Response({'confirmation': 'Interview slots removed successfully!'})

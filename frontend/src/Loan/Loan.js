@@ -52,7 +52,7 @@ const Loan = () =>
         setSimulationResult(null); // Clear previous results
 
         // Make API request to the backend
-        fetch(process.env.REACT_APP_API_URL + "/api/loan/simulate", {
+        fetch("/api/loan/simulate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -104,7 +104,7 @@ const Loan = () =>
         console.log(formData);
 
         // Make API request to the backend
-        fetch(process.env.REACT_APP_API_URL + "/api/loan/verify_face", {
+        fetch("/api/loan/verify_face", {
             method: "POST",
             body: formData
         })
@@ -143,7 +143,7 @@ const Loan = () =>
         setLoading(true);
 
         // Make API request to the backend
-        fetch(process.env.REACT_APP_API_URL + "/api/loan/apply", {
+        fetch("/api/loan/apply", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -187,7 +187,7 @@ const Loan = () =>
         formData.append("token", token); // Add token to form data
 
         // Make API request to the backend
-        fetch(process.env.REACT_APP_API_URL + "/api/loan/submit_documents", {
+        fetch("/api/loan/submit_documents", {
             method: "POST",
             body: formData, // FormData object
         })

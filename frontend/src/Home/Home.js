@@ -40,7 +40,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + '/api/loan_officer/loans?token=' + token + '&loan_officer_id=' + loan_officer_id);
+                '/api/loan_officer/loans?token=' + token + '&loan_officer_id=' + loan_officer_id);
             const data = await response.json();
             console.log('Fetched loans:', data);  // Log the fetched data
             if (data.loans)
@@ -71,7 +71,7 @@ const Home = () =>
     {
         try
         {
-            const response = await fetch(process.env.REACT_APP_API_URL + "/api/loans?token=" + token + "&loan_id=" + loan);
+            const response = await fetch("/api/loans?token=" + token + "&loan_id=" + loan);
             const data = await response.json();
 
             console.log("Fetched loan:", data);
@@ -97,7 +97,7 @@ const Home = () =>
             if (answer === "ACCEPTED" || answer === "REJECTED")
                 alert("Updating loan status, could take a while...");
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/assign",
+                "/api/loan/assign",
                 {
                     method: "PUT",
                     headers: {
@@ -126,7 +126,7 @@ const Home = () =>
             try
             {
                 const response = await fetch(
-                    process.env.REACT_APP_API_URL + "/api/loan/interviews/remove",
+                    "/api/loan/interviews/remove",
                     {
                         method: "DELETE",
                         headers: {
@@ -156,7 +156,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + '/api/user/info?token=' + token + '&user_id=' + client_id + "&loan_id=" + loan_id);
+                '/api/user/info?token=' + token + '&user_id=' + client_id + "&loan_id=" + loan_id);
             const data = await response.json();
             console.log('Fetched client:', data);  // Log the fetched data
             if (data)
@@ -177,7 +177,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interviews?token=" + token + "&loan_id=" + singleLoan[ 0 ]
+                "/api/loan/interviews?token=" + token + "&loan_id=" + singleLoan[ 0 ]
             );
             const data = await response.json();
             console.log("Fetched interviews:", data);
@@ -200,7 +200,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interview/add",
+                "/api/loan/interview/add",
                 {
                     method: "POST",
                     headers: {
@@ -230,7 +230,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interview/remove",
+                "/api/loan/interview/remove",
                 {
                     method: "DELETE",
                     headers: {
@@ -450,7 +450,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + '/api/loans?token=' + token);
+                '/api/loans?token=' + token);
             const data = await response.json();
             console.log('Fetched loans:', data);  // Log the fetched data
             if (data.loans_status)
@@ -471,7 +471,7 @@ const Home = () =>
             alert("Updating interview slot, could take a while...");
             setInterviews([]);
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/interviews/chosen",
+                "/api/loan/interviews/chosen",
                 {
                     method: "PUT",
                     headers: {
@@ -512,7 +512,7 @@ const Home = () =>
         try
         {
             const response = await fetch(
-                process.env.REACT_APP_API_URL + "/api/loan/pay",
+                "/api/loan/pay",
                 {
                     method: "PUT",
                     headers: {

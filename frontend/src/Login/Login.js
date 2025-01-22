@@ -58,7 +58,7 @@ const Login = () =>
 
 
         // Simulate login API request
-        fetch(process.env.REACT_APP_API_URL + "/api/login", {
+        fetch("/api/login", {
             method: "POST",
             body: formData
         })

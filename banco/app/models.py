@@ -4,7 +4,7 @@ import pymysql
 connection = pymysql.connect(
     host='database-1.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
     user='admin',
-    password='GvUFyayd)42Q8tgnguknBNCJ<QTQ',
+    password='vAd4rW61XrxAfyhUaGku',
     database='users-info',
     port=3306
 )
@@ -15,7 +15,7 @@ def restart_connection():
     connection = pymysql.connect(
         host='database-1.cd0keqmiesi5.us-east-1.rds.amazonaws.com',
         user='admin',
-        password='GvUFyayd)42Q8tgnguknBNCJ<QTQ',
+        password='vAd4rW61XrxAfyhUaGku',
         database='users-info',
         port=3306
     )

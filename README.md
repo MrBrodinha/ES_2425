@@ -2,6 +2,8 @@
 
 This project involves setting up a web application using AWS Elastic Beanstalk (EB) for deployment, Amazon RDS for database management, and AWS Rekognition for facial recognition. The application includes user management, loan processing, and interview scheduling functionalities.
 
+⚠️ Warning: This project is not runnable as-is since the workflows, step functions, and Lambda functions were not saved. Additional configuration and implementation are required to make the application fully operational.
+
 Authors
 - Filipe Obrist
 - Emanuel Pacheco
